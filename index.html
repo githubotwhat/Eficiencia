@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#15803d">
+<link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Control de Eficiencias Maquinaria</title>
@@ -807,5 +810,12 @@
             });
         }
     </script>
+    <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('Service Worker Registrado'))
+      .catch(err => console.log('Error en Service Worker', err));
+  }
+</script>
 </body>
 </html>
