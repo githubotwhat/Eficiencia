@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Control de Eficiencias Pro APK</title>
+    <title>Control de Eficiencias Maquinaria</title>
 
     <!-- SDK Firebase JS (v9 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -44,7 +43,6 @@
             padding-bottom: 30px;
         }
 
-        /* Top Header APK Nativa */
         header {
             background: var(--primary-gradient);
             color: white;
@@ -61,7 +59,6 @@
         header h1 {
             font-size: 1.15rem;
             font-weight: 800;
-            letter-spacing: 0.3px;
         }
 
         .auth-status {
@@ -73,14 +70,8 @@
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.3);
             cursor: pointer;
-            transition: all 0.2s ease;
         }
 
-        .auth-status:active {
-            transform: scale(0.95);
-        }
-
-        /* Top Bar Navegación */
         .top-nav {
             background: #ffffff;
             display: flex;
@@ -104,7 +95,6 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            transition: all 0.25s ease;
             white-space: nowrap;
         }
 
@@ -120,7 +110,6 @@
             margin: 0 auto;
         }
 
-        /* Tarjetas Estilo APK Moderno */
         .card {
             background: var(--card-bg);
             border-radius: var(--radius-card);
@@ -143,7 +132,6 @@
             align-items: center;
         }
 
-        /* Grids Adaptables al Ancho del Teléfono */
         .grid-2 {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -182,13 +170,6 @@
             outline: none;
             background: #f8fafc;
             color: var(--text-main);
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
-            text-overflow: ellipsis;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            border-color: var(--primary);
-            background: #ffffff;
         }
 
         .calc-field {
@@ -199,7 +180,6 @@
             text-align: center;
         }
 
-        /* Botones de Acción Estilo APK */
         .btn {
             width: 100%;
             padding: 13px;
@@ -209,12 +189,7 @@
             font-size: 0.9rem;
             cursor: pointer;
             margin-top: 8px;
-            transition: all 0.2s ease;
             box-shadow: var(--shadow-sm);
-        }
-
-        .btn:active {
-            transform: scale(0.98);
         }
 
         .btn-primary { background: var(--primary-gradient); color: white; }
@@ -231,7 +206,6 @@
             cursor: pointer;
         }
 
-        /* Filas Adaptables */
         .list-row {
             display: flex;
             justify-content: space-between;
@@ -252,7 +226,46 @@
             white-space: nowrap;
         }
 
-        /* Modales */
+        .history-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .history-card h4 {
+            font-size: 0.82rem;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        #toast {
+            visibility: hidden;
+            min-width: 200px;
+            background-color: #1e293b;
+            color: #fff;
+            text-align: center;
+            border-radius: 12px;
+            padding: 12px 16px;
+            position: fixed;
+            z-index: 300;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.3s, fadeout 0.3s 2.7s;
+        }
+
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
+
         .modal {
             display: none;
             position: fixed;
@@ -272,7 +285,6 @@
             border-radius: 20px;
             width: 90%;
             max-width: 380px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
         }
 
         .view-section { display: none; }
@@ -282,11 +294,10 @@
 <body>
 
     <header>
-        <h1>Control Eficiencias</h1>
+        <h2>Control Eficiencias</h2>
         <div class="auth-status" id="auth-btn" onclick="openLoginModal()">Login Admin</div>
     </header>
 
-    <!-- Top Navigation (Debajo del Header) -->
     <div class="top-nav">
         <button class="nav-item active" onclick="cambiarSeccion('eficiencia', this)">Eficiencias</button>
         <button class="nav-item" onclick="cambiarSeccion('semanal', this)">Efi Semanal</button>
@@ -296,7 +307,6 @@
 
     <div class="container">
 
-        <!-- VISTA: DATOS GENERALES (SÓLO VISIBLE EN LA PESTAÑA EFICIENCIAS) -->
         <div class="card" id="card-datos-generales">
             <div class="card-title">Datos Generales del Turno</div>
             <div class="grid-2">
@@ -305,7 +315,7 @@
                     <select id="frente">
                         <option value="Frente 1">Frente 1</option>
                         <option value="Frente 2">Frente 2</option>
-                        <option value="Frente 3">Frente 3</option>
+                        <option value="Frente 3">Frente 5</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -353,23 +363,6 @@
                 <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 12px;">Promedios acumulados de eficiencia de la semana activa.</p>
                 <div id="lista-efi-semanal"></div>
             </div>
-
-            <!-- Buscador de Semanas -->
-            <div class="card">
-                <div class="card-title">Buscar Historial Semanal</div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Seleccionar Semana</label>
-                        <select id="select-buscar-semana">
-                            <!-- Carga dinámica -->
-                        </select>
-                    </div>
-                    <div class="form-group" style="justify-content: flex-end;">
-                        <button class="btn btn-accent" style="margin-top:0;" onclick="buscarSemanaHistorial()">Buscar</button>
-                    </div>
-                </div>
-                <div id="resultado-busqueda-semanal" style="margin-top: 10px;"></div>
-            </div>
         </div>
 
         <!-- 3. VISTA: TONS ACUMULADAS -->
@@ -398,12 +391,29 @@
             </div>
 
             <div class="card">
-                <div class="card-title">Catálogo de Equipos</div>
+                <div class="card-title">Catálogo de Equipos Registrados</div>
                 <div id="lista-catalogo-admin"></div>
+            </div>
+
+            <!-- Búsqueda e Historial Detallado por Semana en Admin -->
+            <div class="card">
+                <div class="card-title">Consulta Detallada de Historial Semanal</div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Seleccionar Semana</label>
+                        <select id="select-admin-semana"></select>
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <button class="btn btn-accent" style="margin-top:0;" onclick="consultarDetalleSemanaAdmin()">Consultar</button>
+                    </div>
+                </div>
+                <div id="contenedor-historial-admin" style="margin-top: 12px;"></div>
             </div>
         </div>
 
     </div>
+
+    <div id="toast">Notificación</div>
 
     <!-- Modal Login Admin -->
     <div class="modal" id="modal-login">
@@ -419,21 +429,25 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURACIÓN FIREBASE REALTIME DATABASE ---
         const firebaseConfig = {
             databaseURL: "https://eficiencia-d5aeb-default-rtdb.firebaseio.com/" 
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // --- 2. ESTADO GLOBAL ---
         let isAdmin = false;
         let catalogoMaquinas = [];
         let equiposTurno = [];
 
         document.getElementById('fecha').valueAsDate = new Date();
 
-        // --- 3. AUTENTICACIÓN ADMIN PERSISTENTE ---
+        function showToast(msj) {
+            const t = document.getElementById("toast");
+            t.innerText = msj;
+            t.className = "show";
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+        }
+
         function checkAuth() {
             if (localStorage.getItem('admin_logged') === 'true') {
                 isAdmin = true;
@@ -441,6 +455,7 @@
                 document.getElementById('admin-actions').style.display = "block";
                 document.getElementById('nav-admin-tab').style.display = "block";
                 document.getElementById('btn-guardar-semanal').style.display = "inline-block";
+                cargarSemanasDisponiblesAdmin();
             } else {
                 isAdmin = false;
                 document.getElementById('auth-btn').innerText = "Login Admin";
@@ -451,14 +466,13 @@
             renderEquipos();
         }
 
-        // Ejecutar autenticación guardada al cargar
         checkAuth();
 
         function openLoginModal() {
             if (isAdmin) {
                 localStorage.removeItem('admin_logged');
                 checkAuth();
-                alert("Sesión de administrador cerrada.");
+                showToast("Sesión cerrada");
             } else {
                 document.getElementById('modal-login').classList.add('open');
             }
@@ -475,12 +489,12 @@
                 checkAuth();
                 cerrarLoginModal();
                 document.getElementById('input-pass').value = '';
+                showToast("Sesión iniciada");
             } else {
-                alert("Contraseña incorrecta.");
+                showToast("Contraseña incorrecta");
             }
         }
 
-        // --- 4. NAVEGACIÓN ENTRE VISTAS ---
         function cambiarSeccion(secId, btn) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -488,28 +502,22 @@
             document.getElementById('sec-' + secId).classList.add('active');
             if(btn) btn.classList.add('active');
 
-            // Mostrar "Datos Generales" solo en la pestaña "eficiencia"
             const cardGenerales = document.getElementById('card-datos-generales');
-            if (secId === 'eficiencia') {
-                cardGenerales.style.display = 'block';
-            } else {
-                cardGenerales.style.display = 'none';
-            }
+            cardGenerales.style.display = (secId === 'eficiencia') ? 'block' : 'none';
 
             if(secId === 'semanal') cargarEfiSemanal();
             if(secId === 'tons') cargarTonsAcumuladas();
+            if(secId === 'admin') cargarSemanasDisponiblesAdmin();
         }
 
-        // --- 5. CÁLCULO DE NUMERO DE SEMANA (Corte en Domingos) ---
         function getSemanaNumero(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
             d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
             var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-            var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
-            return weekNo;
+            return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
         }
 
-        // --- 6. GESTIÓN DE CATÁLOGO & RENDERS ---
+        // CATÁLOGO
         db.ref('catalogo').on('value', snapshot => {
             catalogoMaquinas = [];
             const data = snapshot.val();
@@ -517,15 +525,20 @@
                 catalogoMaquinas.push({ key: id, ...data[id] });
             }
             renderCatalogoAdmin();
+            renderEquipos();
         });
 
         function renderCatalogoAdmin() {
             const container = document.getElementById('lista-catalogo-admin');
             container.innerHTML = '';
+            if (catalogoMaquinas.length === 0) {
+                container.innerHTML = `<p style="font-size:0.8rem; color:#666;">No hay maquinarias registradas.</p>`;
+                return;
+            }
             catalogoMaquinas.forEach(m => {
                 container.innerHTML += `
                     <div class="list-row">
-                        <span><strong>ID:</strong> ${m.id} | <strong>Op:</strong> ${m.operador}</span>
+                        <span><strong>ID:</strong> ${m.maquinaria_id} | <strong>Op:</strong> ${m.operador}</span>
                         <button class="btn-delete" onclick="borrarCatalogo('${m.key}')">Eliminar</button>
                     </div>
                 `;
@@ -533,25 +546,34 @@
         }
 
         function guardarCatalogoMaquinaria() {
-            const id = document.getElementById('admin-new-id').value.trim();
-            const operador = document.getElementById('admin-new-operador').value.trim();
-            if(!id || !operador) return alert("Complete los datos.");
+            const idInput = document.getElementById('admin-new-id');
+            const opInput = document.getElementById('admin-new-operador');
+            const idVal = idInput.value.trim();
+            const opVal = opInput.value.trim();
+
+            if (!idVal || !opVal) {
+                return showToast("Ingrese ID y Operador");
+            }
             
-            db.ref('catalogo').push({ id, operador }, () => {
-                document.getElementById('admin-new-id').value = '';
-                document.getElementById('admin-new-operador').value = '';
+            db.ref('catalogo').push({ maquinaria_id: idVal, operador: opVal }, (err) => {
+                if(!err) {
+                    idInput.value = '';
+                    opInput.value = '';
+                    showToast("Maquinaria guardada con éxito");
+                } else {
+                    showToast("Error al guardar en base de datos");
+                }
             });
         }
 
         function borrarCatalogo(key) {
-            if(confirm("¿Desea borrar esta maquinaria del catálogo?")) {
-                db.ref('catalogo/' + key).remove();
-            }
+            db.ref('catalogo/' + key).remove(() => showToast("Maquinaria eliminada"));
         }
 
-        // --- 7. REGISTRO DE EFICIENCIAS DIARIAS (TURNO) ---
+        // TURNOS
         function agregarFormMaquinaria() {
-            equiposTurno.push({ id: catalogoMaquinas[0]?.id || "", hrTrab: 8, hrNoEfect: 0, jaulas: 0, pesoJaula: 27 });
+            if(catalogoMaquinas.length === 0) return showToast("Agregue primero equipos en Admin");
+            equiposTurno.push({ id: catalogoMaquinas[0].maquinaria_id, hrTrab: 8, hrNoEfect: 0, jaulas: 0, pesoJaula: 27 });
             renderEquipos();
         }
 
@@ -564,7 +586,7 @@
                 const toneladas = eq.jaulas * eq.pesoJaula;
                 const eficiencia = hrEfectivas > 0 ? (toneladas / hrEfectivas).toFixed(2) : 0;
 
-                let optHtml = catalogoMaquinas.map(m => `<option value="${m.id}" ${m.id===eq.id?'selected':''}>${m.id}</option>`).join('');
+                let optHtml = catalogoMaquinas.map(m => `<option value="${m.maquinaria_id}" ${m.maquinaria_id === eq.id ? 'selected':''}>${m.maquinaria_id}</option>`).join('');
 
                 container.innerHTML += `
                     <div class="card">
@@ -626,7 +648,7 @@
         }
 
         function guardarTurnoFirebase() {
-            if(equiposTurno.length === 0) return alert("Agregue al menos una maquinaria.");
+            if(equiposTurno.length === 0) return showToast("Agregue al menos una maquinaria");
 
             const fechaVal = document.getElementById('fecha').value;
             const numSemana = getSemanaNumero(new Date(fechaVal));
@@ -643,13 +665,12 @@
 
             db.ref('turnos').push(registroTurno, (err) => {
                 if(!err) {
-                    // Acumular Toneladas por maquina en Base de Datos
                     equiposTurno.forEach(eq => {
                         const tonCargadas = eq.jaulas * eq.pesoJaula;
                         db.ref('toneladas_acumuladas/' + eq.id).transaction(current => (current || 0) + tonCargadas);
                     });
 
-                    alert("Turno guardado exitosamente.");
+                    showToast("Turno guardado correctamente");
                     equiposTurno = [];
                     document.getElementById('observaciones').value = '';
                     renderEquipos();
@@ -657,7 +678,6 @@
             });
         }
 
-        // --- 8. EFI SEMANAL ---
         function cargarEfiSemanal() {
             const numSemana = getSemanaNumero(new Date());
             document.getElementById('lbl-semana-actual').innerText = "Semana " + numSemana;
@@ -700,10 +720,9 @@
             db.ref('historial_semanal/Semana_' + numSemana).set({
                 fecha_cierre: new Date().toISOString(),
                 datos: listData
-            }, () => alert("Historial semanal guardado exitosamente."));
+            }, () => showToast("Semana guardada"));
         }
 
-        // --- 9. TONELADAS ACUMULADAS POR OPERADOR ---
         function cargarTonsAcumuladas() {
             db.ref('toneladas_acumuladas').on('value', snapshot => {
                 const tonsData = snapshot.val() || {};
@@ -711,8 +730,8 @@
                 list.innerHTML = '';
 
                 for(let id in tonsData) {
-                    let cat = catalogoMaquinas.find(m => m.id === id);
-                    let opCode = cat ? cat.operador : 'No asignado';
+                    let cat = catalogoMaquinas.find(m => m.maquinaria_id === id);
+                    let opCode = cat ? cat.operador : 'Sin Operador';
 
                     list.innerHTML += `
                         <div class="list-row" style="flex-direction:column; align-items:flex-start; gap:4px;">
@@ -721,6 +740,67 @@
                                 <span class="badge" style="background:#eff6ff; color:#1d4ed8;">Tons: ${tonsData[id]}</span>
                             </div>
                             <span style="font-size:0.75rem; color:var(--text-secondary);">Operador: ${opCode}</span>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // --- CONSULTA Y BUSQUEDA DE HISTORIAL EN ADMIN ---
+        function cargarSemanasDisponiblesAdmin() {
+            db.ref('turnos').once('value', snapshot => {
+                const data = snapshot.val();
+                let semanas = new Set();
+                for (let key in data) {
+                    if (data[key].semana) semanas.add(data[key].semana);
+                }
+                const select = document.getElementById('select-admin-semana');
+                select.innerHTML = '';
+                if (semanas.size === 0) {
+                    select.innerHTML = '<option value="">Sin semanas registradas</option>';
+                    return;
+                }
+                Array.from(semanas).sort((a,b) => b - a).forEach(s => {
+                    select.innerHTML += `<option value="${s}">Semana ${s}</option>`;
+                });
+            });
+        }
+
+        function consultarDetalleSemanaAdmin() {
+            const sem = parseInt(document.getElementById('select-admin-semana').value);
+            if (!sem) return showToast("Seleccione una semana válida");
+
+            db.ref('turnos').orderByChild('semana').equalTo(sem).once('value', snapshot => {
+                const data = snapshot.val();
+                const container = document.getElementById('contenedor-historial-admin');
+                container.innerHTML = '';
+
+                if (!data) {
+                    container.innerHTML = '<p style="font-size:0.8rem; color:#666;">No hay registros para esta semana.</p>';
+                    return;
+                }
+
+                for (let key in data) {
+                    const t = data[key];
+                    let eqHtml = '';
+                    t.equipos.forEach(eq => {
+                        const hrEf = Math.max(0, eq.hrTrab - eq.hrNoEfect);
+                        const ton = eq.jaulas * eq.pesoJaula;
+                        const efi = hrEf > 0 ? (ton / hrEf).toFixed(2) : 0;
+
+                        eqHtml += `
+                            <div class="list-row" style="font-size:0.78rem;">
+                                <span>ID: <strong>${eq.id}</strong> | Trab: ${eq.hrTrab}h | Efec: ${hrEf.toFixed(1)}h</span>
+                                <span class="badge">Ton: ${ton} | Efi: ${efi}</span>
+                            </div>
+                        `;
+                    });
+
+                    container.innerHTML += `
+                        <div class="history-card">
+                            <h4>${t.frente} - ${t.finca} (${t.fecha} | Turno: ${t.turno})</h4>
+                            <p style="font-size:0.75rem; color:#555; margin-bottom:6px;"><strong>Obs:</strong> ${t.observaciones || 'Ninguna'}</p>
+                            ${eqHtml}
                         </div>
                     `;
                 }
