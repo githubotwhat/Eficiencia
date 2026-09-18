@@ -1,0 +1,21 @@
+{
+  "short_name": "Eficiencias",
+  "name": "Control de Eficiencias Maquinaria",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#f0f4f8",
+  "theme_color": "#15803d",
+  "display": "standalone",
+  "orientation": "portrait"
+}
