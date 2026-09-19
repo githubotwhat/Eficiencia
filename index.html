@@ -251,7 +251,7 @@
 
         #toast {
             visibility: hidden;
-            min-width: 200px;
+            min-width: 220px;
             background-color: #1e293b;
             color: #fff;
             text-align: center;
@@ -447,7 +447,10 @@
     </div>
 
     <script>
+        // COMPLETA CON TUS DATOS DE FIREBASE
         const firebaseConfig = {
+            apiKey: "EKo80zgIMAObFhaXiw30TEAHZkvU", // <--- IMPORTANTE: Coloca tu API Key de Firebase
+            authDomain: "eficiencia-d5aeb.firebaseapp.com",
             databaseURL: "https://eficiencia-d5aeb-default-rtdb.firebaseio.com/" 
         };
         firebase.initializeApp(firebaseConfig);
@@ -472,7 +475,7 @@
             const t = document.getElementById("toast");
             t.innerText = msj;
             t.className = "show";
-            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3500);
         }
 
         function cleanFirebaseKey(key) {
@@ -536,7 +539,14 @@
                 .catch(error => {
                     btn.disabled = false;
                     btn.innerText = "Ingresar";
-                    showToast("Correo o contraseña incorrectos");
+                    console.error("Error Auth:", error);
+                    if (error.code === 'auth/api-key-not-valid') {
+                        showToast("Falta configurar la apiKey en firebaseConfig");
+                    } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                        showToast("Correo o contraseña incorrectos");
+                    } else {
+                        showToast("Error: " + error.message);
+                    }
                 });
         }
 
