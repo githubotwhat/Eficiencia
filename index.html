@@ -1063,25 +1063,64 @@
             }
         }
 
-        function procesarEscaneoNFC(rawId) {
-            let idLimpio = rawId.toUpperCase().replace(/\s+/g, '');
+        // Función auxiliar para contar ocurrencias exactas de un patrón dentro del texto NFC
+        function contarOcurrencias(texto, patron) {
+            if (!texto || !patron) return 0;
+            const patronEscapado = patron.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(patronEscapado, 'gi');
+            const coincidencias = texto.match(regex);
+            return coincidencias ? coincidencias.length : 0;
+        }
 
-            if (!conteoJaulasNFC[idLimpio]) {
-                conteoJaulasNFC[idLimpio] = { jaulas: 0, lecturas: 0, pesoJaula: 27 };
+        function procesarEscaneoNFC(rawText) {
+            if (!rawText) return;
+
+            const textoLimpio = rawText.toUpperCase().trim();
+
+            // 1. Obtener la lista de IDs a buscar (incluyendo catálogo y predeterminados)
+            let idsABuscar = Object.keys(conteoJaulasNFC);
+            catalogoMaquinas.forEach(m => {
+                if (m.maquinaria_id && !idsABuscar.includes(m.maquinaria_id)) {
+                    idsABuscar.push(m.maquinaria_id);
+                }
+            });
+
+            // Ordenar por longitud descendente para evitar parciales engañosos
+            idsABuscar.sort((a, b) => b.length - a.length);
+
+            let seEncontroAlguno = false;
+            let resumenEscaneo = [];
+
+            idsABuscar.forEach(idEq => {
+                const cantidadOcurrencias = contarOcurrencias(textoLimpio, idEq);
+
+                if (cantidadOcurrencias > 0) {
+                    seEncontroAlguno = true;
+
+                    if (!conteoJaulasNFC[idEq]) {
+                        conteoJaulasNFC[idEq] = { jaulas: 0, lecturas: 0, pesoJaula: 27 };
+                    }
+
+                    let jaulasPorUnidad = idEq.startsWith("07-") ? 2 : 1;
+                    let jaulasASumar = cantidadOcurrencias * jaulasPorUnidad;
+
+                    conteoJaulasNFC[idEq].jaulas += jaulasASumar;
+                    conteoJaulasNFC[idEq].lecturas += cantidadOcurrencias;
+
+                    resumenEscaneo.push(`${idEq} (x${cantidadOcurrencias})`);
+                }
+            });
+
+            if (seEncontroAlguno) {
+                totalEscaneosNFC += 1;
+                if (navigator.vibrate) {
+                    navigator.vibrate(150);
+                }
+                showToast(`🚜 Escaneado: ${resumenEscaneo.join(', ')}`);
+                renderConteoJaulas();
+            } else {
+                showToast(`⚠️ No se reconoció maquinaria en: "${rawText}"`);
             }
-
-            // Suma por escaneo predeterminado
-            let jaulasAumento = idLimpio.startsWith("07-") ? 2 : 1; 
-            conteoJaulasNFC[idLimpio].jaulas += jaulasAumento;
-            conteoJaulasNFC[idLimpio].lecturas += 1;
-            totalEscaneosNFC += 1;
-
-            if (navigator.vibrate) {
-                navigator.vibrate(150);
-            }
-
-            showToast(`🚜 Escaneado: ${idLimpio} (+${jaulasAumento} Jaula)`);
-            renderConteoJaulas();
         }
 
         function renderConteoJaulas() {
@@ -1928,85 +1967,6 @@
                     showToast("Error al reiniciar la base de datos");
                 });
         }
-
-        /* ==========================================================
-   2. MÓDULO NFC & CONTEO DE JAULAS (ACTUALIZADO)
-   ========================================================== */
-
-// Función auxiliar para contar ocurrencias exactas de un patrón dentro del texto NFC
-function contarOcurrencias(texto, patron) {
-    if (!texto || !patron) return 0;
-    // Escapar guiones y caracteres especiales de Regex
-    const patronEscapado = patron.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const regex = new RegExp(patronEscapado, 'g');
-    const coincidencias = texto.match(regex);
-    return coincidencias ? coincidencias.length : 0;
-}
-
-function procesarEscaneoNFC(rawText) {
-    if (!rawText) return;
-
-    // 1. Obtener la lista de IDs a buscar (incluyendo catálogo y equipos predeterminados)
-    let idsABuscar = Object.keys(conteoJaulasNFC);
-
-    // Agregar IDs del catálogo administrado por el usuario si no están en el objeto
-    catalogoMaquinas.forEach(m => {
-        if (!idsABuscar.includes(m.maquinaria_id)) {
-            idsABuscar.push(m.maquinaria_id);
-        }
-    });
-
-    let hallazgosEnEsteEscaneo = 0;
-
-    // 2. Iterar sobre cada ID y contar cuántas veces se repite en el string del NFC
-    idsABuscar.forEach(idEq => {
-        // Soporta formatos con o sin cero inicial (ej. "07-227" y "7-227")
-        let patronAlternativo = idEq;
-        if (idEq.startsWith("07-")) {
-            patronAlternativo = idEq.replace("07-", "7-");
-        }
-
-        // Se busca el ID normal y el formato alternativo si aplica
-        let vecesEncontrado = contarOcurrencias(rawText, idEq);
-        if (patronAlternativo !== idEq) {
-            vecesEncontrado += contarOcurrencias(rawText, patronAlternativo);
-        }
-
-        if (vecesEncontrado > 0) {
-            // Inicializar el equipo en la estructura si no existe
-            if (!conteoJaulasNFC[idEq]) {
-                conteoJaulasNFC[idEq] = { jaulas: 0, lecturas: 0, pesoJaula: 27 };
-            }
-
-            // Sumar las repeticiones encontradas al conteo acumulado de jaulas/lecturas
-            conteoJaulasNFC[idEq].jaulas += vecesEncontrado;
-            conteoJaulasNFC[idEq].lecturas += 1;
-            hallazgosEnEsteEscaneo += vecesEncontrado;
-        }
-    });
-
-    if (hallazgosEnEsteEscaneo > 0) {
-        totalEscaneosNFC += 1;
-
-        if (navigator.vibrate) {
-            navigator.vibrate([100, 50, 100]); // Patrón de vibración de éxito
-        }
-
-        showToast(`📡 NFC Leído: Se contaron ${hallazgosEnEsteEscaneo} jaula(s) / id(s).`);
-    } else {
-        showToast("⚠️ Tag NFC leído pero no se encontraron IDs de maquinaria coincidentes.");
-    }
-
-    renderConteoJaulas();
-}
-
-    </script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-          .then(() => console.log('Service Worker Registrado'))
-          .catch(err => console.log('Error en Service Worker', err));
-      }
     </script>
 </body>
 </html>
