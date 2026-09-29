@@ -6,7 +6,7 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Control de Eficiencias Maquinaria Pro v1</title>
+    <title>Control de Eficiencias Maquinaria Pro</title>
 
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -774,7 +774,7 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label>ID Maquinaria</label>
-                        <input type="text" id="admin-new-id" placeholder="Ej: 11-41 o 07-12">
+                        <input type="text" id="admin-new-id" placeholder="Ej: 11-41 o 07-225">
                     </div>
                     <div class="form-group">
                         <label>Código Operador</label>
@@ -880,6 +880,13 @@
     </div>
 
     <script>
+        // Registro de Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW reg error:', err));
+            });
+        }
+
         const firebaseConfig = {
             apiKey: "AIzaSyB0Va-EKo80zgIMAObFhaXiw30TEAHZkvU", 
             authDomain: "eficiencia-d5aeb.firebaseapp.com",
@@ -900,11 +907,21 @@
         let catalogoMaquinas = [];
         let equiposTurno = [];
         let datosSemanalesExportar = [];
-        let kpisSemanaActual = {};
+        let kpisSemanaActual = {
+            semana: 0,
+            promEfiA: '0.0',
+            promEfiT: '0.0',
+            totalTons: 0,
+            hrsEfectivas: '0.0',
+            hrsNoEfectivas: '0.0',
+            pesoPromedio: '0.0'
+        };
 
         // Configuración para el escáner de Jaulas NFC
         let ndefReaderInstance = null;
         let totalEscaneosNFC = 0;
+        
+        // Objeto dinámico que almacenará cualquier equipo que se agregue o escanee
         let conteoJaulasNFC = {
             '11-41': { jaulas: 0, lecturas: 0, pesoJaula: 27 },
             '11-45': { jaulas: 0, lecturas: 0, pesoJaula: 27 },
@@ -924,9 +941,9 @@
         function initIndexedDB() {
             const request = indexedDB.open("EficienciasLocalStoreDB", 1);
             request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains("turnos_pendientes")) {
-                    db.createObjectStore("turnos_pendientes", { keyPath: "id", autoIncrement: true });
+                const dbInstance = e.target.result;
+                if (!dbInstance.objectStoreNames.contains("turnos_pendientes")) {
+                    dbInstance.createObjectStore("turnos_pendientes", { keyPath: "id", autoIncrement: true });
                 }
             };
             request.onsuccess = (e) => {
@@ -990,7 +1007,7 @@
                     await db.ref('turnos').push(registroTurno);
                     
                     registroTurno.equipos.forEach(eq => {
-                        const tonCargadas = eq.jaulas * eq.pesoJaula;
+                        const tonCargadas = (parseFloat(eq.jaulas) || 0) * (parseFloat(eq.pesoJaula) || 0);
                         const keyUnica = eq.id + '_' + (eq.operador || 'sincod');
                         db.ref('toneladas_acumuladas/' + keyUnica).transaction(current => (current || 0) + tonCargadas);
                     });
@@ -1011,6 +1028,7 @@
 
         function actualizarBadgeRed(isOnline, cantidadPendientes = 0) {
             const badge = document.getElementById('network-badge');
+            if(!badge) return;
             if (isOnline) {
                 if (cantidadPendientes > 0) {
                     badge.className = "offline-status-badge offline";
@@ -1032,7 +1050,7 @@
         });
 
         /* ==========================================================
-           2. MÓDULO NFC & CONTEO DE JAULAS
+           2. MÓDULO NFC & CONTEO DE JAULAS (LÓGICA DINÁMICA DE DETECCIÓN)
            ========================================================== */
         async function iniciarEscanerNFC() {
             if (!('NDEFReader' in window)) {
@@ -1050,9 +1068,9 @@
                 const statusText = document.getElementById('nfc-status-text');
                 const btn = document.getElementById('btn-toggle-nfc');
 
-                indicator.classList.remove('inactive');
-                statusText.innerText = "Escaneando... Acerca la etiqueta NFC a la parte trasera.";
-                btn.style.display = "none";
+                if(indicator) indicator.classList.remove('inactive');
+                if(statusText) statusText.innerText = "Escaneando... Acerca la etiqueta NFC a la parte trasera.";
+                if(btn) btn.style.display = "none";
 
                 showToast("📡 Escáner NFC Activado");
 
@@ -1102,11 +1120,21 @@
             const textoLimpio = rawText.toUpperCase().trim();
 
             let idsABuscar = Object.keys(conteoJaulasNFC);
+            
             catalogoMaquinas.forEach(m => {
                 if (m.maquinaria_id && !idsABuscar.includes(m.maquinaria_id)) {
                     idsABuscar.push(m.maquinaria_id);
                 }
             });
+
+            const patronesEncontrados = textoLimpio.match(/\b\d{2}-\d{2,3}\b/g);
+            if (patronesEncontrados) {
+                patronesEncontrados.forEach(idMatch => {
+                    if (!idsABuscar.includes(idMatch)) {
+                        idsABuscar.push(idMatch);
+                    }
+                });
+            }
 
             idsABuscar.sort((a, b) => b.length - a.length);
 
@@ -1129,9 +1157,21 @@
                     conteoJaulasNFC[idEq].jaulas += jaulasASumar;
                     conteoJaulasNFC[idEq].lecturas += cantidadOcurrencias;
 
-                    resumenEscaneo.push(`${idEq} (x${cantidadOcurrencias})`);
+                    resumenEscaneo.push(`${idEq} (+${cantidadOcurrencias})`);
                 }
             });
+
+            if (!seEncontroAlguno) {
+                const idDirecto = cleanFirebaseKey(textoLimpio);
+                if (!conteoJaulasNFC[idDirecto]) {
+                    conteoJaulasNFC[idDirecto] = { jaulas: 0, lecturas: 0, pesoJaula: 27 };
+                }
+                let jaulasPorUnidad = idDirecto.startsWith("07-") ? 2 : 1;
+                conteoJaulasNFC[idDirecto].jaulas += jaulasPorUnidad;
+                conteoJaulasNFC[idDirecto].lecturas += 1;
+                resumenEscaneo.push(`${idDirecto} (+1)`);
+                seEncontroAlguno = true;
+            }
 
             if (seEncontroAlguno) {
                 totalEscaneosNFC += 1;
@@ -1140,13 +1180,12 @@
                 }
                 showToast(`🚜 Escaneado: ${resumenEscaneo.join(', ')}`);
                 renderConteoJaulas();
-            } else {
-                showToast(`⚠️ No se reconoció maquinaria en: "${rawText}"`);
             }
         }
 
         function renderConteoJaulas() {
             const container = document.getElementById('lista-conteo-jaulas-nfc');
+            if(!container) return;
             let totalJaulasSuma = 0;
 
             container.innerHTML = '';
@@ -1196,22 +1235,27 @@
            ========================================================== */
         function showToast(msj) {
             const t = document.getElementById("toast");
+            if (!t) return;
             t.innerText = msj;
             t.className = "show";
             setTimeout(() => { t.className = t.className.replace("show", ""); }, 3500);
         }
 
         function cleanFirebaseKey(key) {
+            if (!key) return "";
             return key.replace(/[\.\#\$\/\[\]]/g, "_");
         }
 
         function togglePasswordVisibility() {
             const passInput = document.getElementById('input-pass');
-            passInput.type = (passInput.type === 'password') ? 'text' : 'password';
+            if (passInput) {
+                passInput.type = (passInput.type === 'password') ? 'text' : 'password';
+            }
         }
 
         function triggerHeaderTractorAnimation() {
             const tractorEl = document.getElementById('header-tractor-banner');
+            if (!tractorEl) return;
             tractorEl.classList.remove('animate-login');
             void tractorEl.offsetWidth;
             tractorEl.classList.add('animate-login');
@@ -1311,13 +1355,18 @@
             const data = snapshot.val();
             for (let id in data) {
                 catalogoMaquinas.push({ key: id, ...data[id] });
+                if (data[id].maquinaria_id && !conteoJaulasNFC[data[id].maquinaria_id]) {
+                    conteoJaulasNFC[data[id].maquinaria_id] = { jaulas: 0, lecturas: 0, pesoJaula: 27 };
+                }
             }
             renderCatalogoAdmin();
             renderEquipos();
+            renderConteoJaulas();
         });
 
         function renderCatalogoAdmin() {
             const container = document.getElementById('lista-catalogo-admin');
+            if(!container) return;
             container.innerHTML = '';
             if (catalogoMaquinas.length === 0) {
                 container.innerHTML = `<p style="font-size:0.75rem; color:var(--text-secondary);">No hay maquinarias registradas.</p>`;
@@ -1366,6 +1415,7 @@
 
         function renderEquipos() {
             const container = document.getElementById('equipos-container');
+            if(!container) return;
             container.innerHTML = '';
 
             equiposTurno.forEach((eq, index) => {
@@ -1376,7 +1426,7 @@
 
                 const hrEfectivas = Math.max(0, hrTrab - hrNoEfect);
                 const toneladas = jaulas * pesoJaula;
-                const eficiencia = hrEfectivas > 0 ? (toneladas / hrEfectivas).toFixed(2) : 0;
+                const eficiencia = hrEfectivas > 0 ? (toneladas / hrEfectivas).toFixed(2) : '0.00';
 
                 let optHtml = catalogoMaquinas.map(m => `<option value="${m.maquinaria_id}|${m.operador}" ${(m.maquinaria_id === eq.id && m.operador === eq.operador) ? 'selected':''}>${m.maquinaria_id} (Op: ${m.operador})</option>`).join('');
 
@@ -1455,7 +1505,7 @@
 
             const hrEfectivas = Math.max(0, hrTrab - hrNoEfect);
             const toneladas = jaulas * pesoJaula;
-            const eficiencia = hrEfectivas > 0 ? (toneladas / hrEfectivas).toFixed(2) : 0;
+            const eficiencia = hrEfectivas > 0 ? (toneladas / hrEfectivas).toFixed(2) : '0.00';
 
             card.querySelector('.calc-href').value = hrEfectivas.toFixed(1);
             card.querySelector('.calc-efi').value = eficiencia;
@@ -1543,7 +1593,8 @@
         function cargarEfiSemanal() {
             const fechaActual = new Date();
             const numSemana = getSemanaNumero(fechaActual);
-            document.getElementById('lbl-semana-actual').innerText = "Semana " + numSemana;
+            const lblSemana = document.getElementById('lbl-semana-actual');
+            if(lblSemana) lblSemana.innerText = "Semana " + numSemana;
 
             db.ref('turnos').orderByChild('semana').equalTo(numSemana - 1).once('value', snapshotDom => {
                 const dataDom = snapshotDom.val();
@@ -1555,9 +1606,10 @@
                         const dFecha = new Date(t.fecha);
                         if ((dFecha.getUTCDay() === 0 || t.turno === 'NOCTURNO') && t.turno === 'NOCTURNO') {
                             t.equipos.forEach(eq => {
-                                const hrEf = Math.max(0, eq.hrTrab - eq.hrNoEfect);
-                                const hrNoEf = Math.max(0, eq.hrNoEfect);
-                                const ton = eq.jaulas * eq.pesoJaula;
+                                const hrTrab = parseFloat(eq.hrTrab) || 0;
+                                const hrNoEf = parseFloat(eq.hrNoEfect) || 0;
+                                const hrEf = Math.max(0, hrTrab - hrNoEf);
+                                const ton = (parseFloat(eq.jaulas) || 0) * (parseFloat(eq.pesoJaula) || 0);
                                 const claveIdOp = eq.operador ? `${eq.id}_${eq.operador}` : eq.id;
 
                                 if (!arrastreDomingo[claveIdOp]) {
@@ -1566,11 +1618,11 @@
                                 arrastreDomingo[claveIdOp].ton += ton;
                                 arrastreDomingo[claveIdOp].hrs += hrEf;
                                 arrastreDomingo[claveIdOp].noHrs += hrNoEf;
-                                arrastreDomingo[claveIdOp].hrTrab += eq.hrTrab || 0;
+                                arrastreDomingo[claveIdOp].hrTrab += hrTrab;
                                 if (eq.motivoNoEfect && eq.motivoNoEfect !== 'Ninguno') {
                                     arrastreDomingo[claveIdOp].motivos[eq.motivoNoEfect] = (arrastreDomingo[claveIdOp].motivos[eq.motivoNoEfect] || 0) + hrNoEf;
                                 }
-                                if (eq.pesoJaula > 0) arrastreDomingo[claveIdOp].pesos.push(eq.pesoJaula);
+                                if (eq.pesoJaula > 0) arrastreDomingo[claveIdOp].pesos.push(parseFloat(eq.pesoJaula));
                             });
                         }
                     }
@@ -1588,9 +1640,10 @@
                         if (data[key].archivado) continue;
 
                         data[key].equipos.forEach(eq => {
-                            const hrEf = Math.max(0, eq.hrTrab - eq.hrNoEfect);
-                            const hrNoEf = Math.max(0, eq.hrNoEfect);
-                            const ton = eq.jaulas * eq.pesoJaula;
+                            const hrTrab = parseFloat(eq.hrTrab) || 0;
+                            const hrNoEf = parseFloat(eq.hrNoEfect) || 0;
+                            const hrEf = Math.max(0, hrTrab - hrNoEf);
+                            const ton = (parseFloat(eq.jaulas) || 0) * (parseFloat(eq.pesoJaula) || 0);
                             const claveIdOp = eq.operador ? `${eq.id}_${eq.operador}` : eq.id;
 
                             if(!acumulado[claveIdOp]) {
@@ -1600,11 +1653,11 @@
                             acumulado[claveIdOp].ton += ton;
                             acumulado[claveIdOp].hrs += hrEf;
                             acumulado[claveIdOp].noHrs += hrNoEf;
-                            acumulado[claveIdOp].hrTrab += eq.hrTrab || 0;
+                            acumulado[claveIdOp].hrTrab += hrTrab;
                             if (eq.motivoNoEfect && eq.motivoNoEfect !== 'Ninguno') {
                                 acumulado[claveIdOp].motivos[eq.motivoNoEfect] = (acumulado[claveIdOp].motivos[eq.motivoNoEfect] || 0) + hrNoEf;
                             }
-                            if(eq.pesoJaula > 0) acumulado[claveIdOp].pesos.push(eq.pesoJaula);
+                            if(eq.pesoJaula > 0) acumulado[claveIdOp].pesos.push(parseFloat(eq.pesoJaula));
                         });
                     }
 
@@ -1645,6 +1698,7 @@
                     };
 
                     const list = document.getElementById('lista-efi-semanal');
+                    if(!list) return;
                     list.innerHTML = '';
                     for(let clave in acumulado) {
                         let item = acumulado[clave];
@@ -1710,11 +1764,11 @@
             const numSemana = kpisSemanaActual.semana || getSemanaNumero(new Date());
             let mensaje = `*🚜 CONTROL DE EFICIENCIAS - SEMANA ${numSemana}*\n`;
             mensaje += `\n*📊 RESUMEN GENERAL:*`;
-            mensaje += `\n- Prom. Efi Alzadoras: ${kpisSemanaActual.promEfiA} T/h`;
-            mensaje += `\n- Prom. Efi Tractores: ${kpisSemanaActual.promEfiT} T/h`;
-            mensaje += `\n- Total Tons Cargadas: ${kpisSemanaActual.totalTons} T`;
-            mensaje += `\n- Horas Efectivas: ${kpisSemanaActual.hrsEfectivas} h`;
-            mensaje += `\n- Horas No Efectivas: ${kpisSemanaActual.hrsNoEfectivas} h\n`;
+            mensaje += `\n- Prom. Efi Alzadoras: ${kpisSemanaActual.promEfiA || '0.0'} T/h`;
+            mensaje += `\n- Prom. Efi Tractores: ${kpisSemanaActual.promEfiT || '0.0'} T/h`;
+            mensaje += `\n- Total Tons Cargadas: ${kpisSemanaActual.totalTons || 0} T`;
+            mensaje += `\n- Horas Efectivas: ${kpisSemanaActual.hrsEfectivas || '0.0'} h`;
+            mensaje += `\n- Horas No Efectivas: ${kpisSemanaActual.hrsNoEfectivas || '0.0'} h\n`;
             mensaje += `\n*📋 DETALLE POR EQUIPO:*`;
 
             datosSemanalesExportar.forEach(eq => {
@@ -1766,12 +1820,12 @@
                 ["Fecha de Generación:", new Date().toLocaleString()],
                 [],
                 ["INDICADOR KPI", "VALOR REGISTRADO"],
-                ["Promedio Eficiencia Alzadoras (11-)", parseFloat(kpisSemanaActual.promEfiA)],
-                ["Promedio Eficiencia Tractores (07-)", parseFloat(kpisSemanaActual.promEfiT)],
-                ["Total Toneladas Cargadas", kpisSemanaActual.totalTons],
-                ["Total Horas Efectivas", parseFloat(kpisSemanaActual.hrsEfectivas)],
-                ["Total Horas No Efectivas", parseFloat(kpisSemanaActual.hrsNoEfectivas)],
-                ["Peso Promedio por Jaula (Tons)", parseFloat(kpisSemanaActual.pesoPromedio)]
+                ["Promedio Eficiencia Alzadoras (11-)", parseFloat(kpisSemanaActual.promEfiA || 0)],
+                ["Promedio Eficiencia Tractores (07-)", parseFloat(kpisSemanaActual.promEfiT || 0)],
+                ["Total Toneladas Cargadas", kpisSemanaActual.totalTons || 0],
+                ["Total Horas Efectivas", parseFloat(kpisSemanaActual.hrsEfectivas || 0)],
+                ["Total Horas No Efectivas", parseFloat(kpisSemanaActual.hrsNoEfectivas || 0)],
+                ["Peso Promedio por Jaula (Tons)", parseFloat(kpisSemanaActual.pesoPromedio || 0)]
             ];
             const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
             XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen KPI");
@@ -1823,13 +1877,13 @@
             doc.setFontSize(8);
             doc.setFont("helvetica", "bold");
             
-            doc.text(`Prom. Efi A (11-): ${kpisSemanaActual.promEfiA} T/h`, 20, 46);
-            doc.text(`Prom. Efi T (07-): ${kpisSemanaActual.promEfiT} T/h`, 80, 46);
-            doc.text(`Total Tons: ${kpisSemanaActual.totalTons} T`, 140, 46);
+            doc.text(`Prom. Efi A (11-): ${kpisSemanaActual.promEfiA || '0.0'} T/h`, 20, 46);
+            doc.text(`Prom. Efi T (07-): ${kpisSemanaActual.promEfiT || '0.0'} T/h`, 80, 46);
+            doc.text(`Total Tons: ${kpisSemanaActual.totalTons || 0} T`, 140, 46);
 
-            doc.text(`Hrs Efectivas: ${kpisSemanaActual.hrsEfectivas} h`, 20, 58);
-            doc.text(`Hrs No Efectivas: ${kpisSemanaActual.hrsNoEfectivas} h`, 80, 58);
-            doc.text(`Peso Prom. Jaula: ${kpisSemanaActual.pesoPromedio} T`, 140, 58);
+            doc.text(`Hrs Efectivas: ${kpisSemanaActual.hrsEfectivas || '0.0'} h`, 20, 58);
+            doc.text(`Hrs No Efectivas: ${kpisSemanaActual.hrsNoEfectivas || '0.0'} h`, 80, 58);
+            doc.text(`Peso Prom. Jaula: ${kpisSemanaActual.pesoPromedio || '0.0'} T`, 140, 58);
 
             const tableBody = datosSemanalesExportar.map(d => [
                 d.idEquipo,
@@ -1858,7 +1912,7 @@
             const numSemana = getSemanaNumero(new Date());
             const listData = [];
             document.querySelectorAll('#lista-efi-semanal .list-row').forEach(row => {
-                listData.push(row.innerText.replace('\n', ' '));
+                listData.push(row.innerText.replace(/\n/g, ' '));
             });
 
             db.ref('historial_semanal/Semana_' + numSemana).set({
@@ -1871,6 +1925,7 @@
             db.ref('toneladas_acumuladas').on('value', snapshot => {
                 const tonsData = snapshot.val() || {};
                 const list = document.getElementById('lista-tons-acumuladas');
+                if(!list) return;
                 list.innerHTML = '';
 
                 for(let key in tonsData) {
@@ -1898,6 +1953,7 @@
                     if (data[key].semana) semanas.add(data[key].semana);
                 }
                 const select = document.getElementById('select-admin-semana');
+                if(!select) return;
                 select.innerHTML = '';
                 if (semanas.size === 0) {
                     select.innerHTML = '<option value="">Sin semanas registradas</option>';
@@ -1910,12 +1966,15 @@
         }
 
         function consultarDetalleSemanaAdmin() {
-            const sem = parseInt(document.getElementById('select-admin-semana').value);
-            if (!sem) return showToast("Seleccione una semana válida");
+            const select = document.getElementById('select-admin-semana');
+            if(!select || !select.value) return showToast("Seleccione una semana válida");
+
+            const sem = parseInt(select.value);
 
             db.ref('turnos').orderByChild('semana').equalTo(sem).once('value', snapshot => {
                 const data = snapshot.val();
                 const container = document.getElementById('contenedor-historial-admin');
+                if(!container) return;
                 container.innerHTML = '';
 
                 if (!data) {
@@ -1927,15 +1986,17 @@
                     const t = data[key];
                     let eqHtml = '';
                     t.equipos.forEach(eq => {
-                        const hrEf = Math.max(0, eq.hrTrab - eq.hrNoEfect);
-                        const ton = eq.jaulas * eq.pesoJaula;
-                        const efi = hrEf > 0 ? (ton / hrEf).toFixed(2) : 0;
+                        const hrTrab = parseFloat(eq.hrTrab) || 0;
+                        const hrNoEf = parseFloat(eq.hrNoEfect) || 0;
+                        const hrEf = Math.max(0, hrTrab - hrNoEf);
+                        const ton = (parseFloat(eq.jaulas) || 0) * (parseFloat(eq.pesoJaula) || 0);
+                        const efi = hrEf > 0 ? (ton / hrEf).toFixed(2) : '0.00';
                         const labelOp = eq.operador ? ` | Op: ${eq.operador}` : '';
                         const motivoStr = (eq.motivoNoEfect && eq.motivoNoEfect !== 'Ninguno') ? ` | Motivo: ${eq.motivoNoEfect}` : '';
 
                         eqHtml += `
                             <div class="list-row" style="font-size:0.75rem;">
-                                <span>ID: <strong>${eq.id}</strong>${labelOp} | Trab: ${eq.hrTrab}h | Efec: ${hrEf.toFixed(1)}h${motivoStr}</span>
+                                <span>ID: <strong>${eq.id}</strong>${labelOp} | Trab: ${hrTrab}h | Efec: ${hrEf.toFixed(1)}h${motivoStr}</span>
                                 <span class="badge badge-optimo">Ton: ${ton} | Efi: ${efi}</span>
                             </div>
                         `;
