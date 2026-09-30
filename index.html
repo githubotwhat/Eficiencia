@@ -8,11 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Control de Eficiencias Maquinaria Pro</title>
 
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <!-- SDK Firebase JS (v9 Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -25,11 +20,10 @@
 
     <style>
         :root {
-            --bg-base: #f8fafc;
+            --bg-base: #f1f5f9;
             --surface: #ffffff;
-            --surface-variant: #f1f5f9;
-            --border-color: #e2e8f0;
-            --border-focus: #3b82f6;
+            --surface-variant: #f8fafc;
+            --border-color: #cbd5e1;
             
             --text-primary: #0f172a;
             --text-secondary: #475569;
@@ -40,45 +34,43 @@
             --primary-light: #eff6ff;
             
             --teal: #0d9488;
-            --teal-light: #f0fdf4;
+            --teal-light: #ccfbf1;
             --amber: #d97706;
-            --amber-light: #fffbeb;
+            --amber-light: #fef3c7;
             --rose: #e11d48;
-            --rose-light: #fff1f2;
-            --whatsapp: #16a34a;
+            --rose-light: #ffe4e6;
+            --whatsapp: #25d366;
+            --whatsapp-dark: #128c7e;
             
-            --radius-main: 20px;
+            --radius-main: 22px;
             --radius-card: 16px;
-            --radius-input: 10px;
-            
-            --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-            --shadow-card: 0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
-            --shadow-float: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+            --radius-input: 12px;
+            --shadow-app: 0 4px 15px -2px rgba(15, 23, 42, 0.06);
+            --shadow-float: 0 12px 28px -6px rgba(15, 23, 42, 0.2);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background-color: var(--bg-base);
             color: var(--text-primary);
-            padding-bottom: 100px;
+            padding-bottom: 95px;
             padding-top: env(safe-area-inset-top);
             user-select: none;
-            -webkit-font-smoothing: antialiased;
         }
 
         header {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-color);
-            padding: 12px 20px;
+            padding: 14px 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -90,47 +82,44 @@
         header .brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         header .brand-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%);
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary) 0%, #06b6d4 100%);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.25rem;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
 
         header h2 {
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             font-weight: 800;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.4px;
             color: var(--text-primary);
-            line-height: 1.2;
         }
 
         .offline-status-badge {
             font-size: 0.65rem;
             font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 20px;
+            padding: 3px 8px;
+            border-radius: 12px;
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            background: #ecfdf5;
-            color: #059669;
-            border: 1px solid #a7f3d0;
+            background: var(--teal-light);
+            color: var(--teal);
         }
 
         .offline-status-badge.offline {
-            background: #fef3c7;
-            color: #d97706;
-            border-color: #fde68a;
+            background: var(--amber-light);
+            color: var(--amber);
         }
 
         #header-tractor-banner {
@@ -159,13 +148,13 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid var(--border-color);
             display: flex;
             justify-content: space-around;
-            padding: 8px 8px calc(10px + env(safe-area-inset-bottom));
+            padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
             z-index: 150;
         }
 
@@ -174,64 +163,65 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             padding: 6px 0;
             color: var(--text-muted);
             background: transparent;
             border: none;
-            font-size: 0.65rem;
-            font-weight: 700;
+            font-size: 0.62rem;
+            font-weight: 600;
             cursor: pointer;
             border-radius: 12px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
         }
 
         .nav-item .nav-icon {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             transition: transform 0.2s ease;
         }
 
         .nav-item.active {
             color: var(--primary);
+            font-weight: 800;
         }
 
         .nav-item.active .nav-icon {
-            transform: translateY(-2px) scale(1.1);
+            transform: translateY(-2px);
         }
 
         .container {
-            padding: 16px;
-            max-width: 680px;
+            padding: 16px 14px;
+            max-width: 650px;
             margin: 0 auto;
         }
 
         .card {
             background: var(--surface);
             border-radius: var(--radius-card);
-            padding: 18px;
-            margin-bottom: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
             border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-card);
+            box-shadow: var(--shadow-app);
             width: 100%;
         }
 
         .card-compact {
-            padding: 16px;
-            margin-bottom: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
         }
 
         .card-title {
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             font-weight: 800;
             color: var(--text-primary);
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.5px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
         }
 
         .grid-2 {
@@ -246,7 +236,7 @@
             gap: 8px;
         }
 
-        @media (min-width: 520px) {
+        @media (min-width: 480px) {
             .grid-5-kpi {
                 grid-template-columns: repeat(6, minmax(0, 1fr));
             }
@@ -261,7 +251,7 @@
         .form-group {
             display: flex;
             flex-direction: column;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             min-width: 0;
             position: relative;
         }
@@ -269,10 +259,10 @@
         .form-group label {
             font-size: 0.65rem;
             color: var(--text-secondary);
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
         }
 
         .form-group input, .form-group select, textarea {
@@ -286,19 +276,18 @@
             color: var(--text-primary);
             height: 42px;
             font-weight: 600;
-            transition: all 0.2s ease;
+            transition: border-color 0.2s, background-color 0.2s;
         }
 
         .form-group input:focus, .form-group select:focus, textarea:focus {
-            border-color: var(--border-focus);
+            border-color: var(--primary);
             background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
         }
 
         .calc-field {
             background: #f0fdf4 !important;
             font-weight: 800 !important;
-            color: #166534 !important;
+            color: var(--teal) !important;
             border-color: #bbf7d0 !important;
             text-align: center;
         }
@@ -307,9 +296,9 @@
             border: none;
             border-radius: var(--radius-input);
             font-weight: 700;
-            font-size: 0.78rem;
+            font-size: 0.80rem;
             cursor: pointer;
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.15s ease;
             user-select: none;
             display: inline-flex;
             align-items: center;
@@ -318,7 +307,7 @@
         }
 
         button:active, .btn:active {
-            transform: scale(0.97);
+            transform: scale(0.96) !important;
             opacity: 0.9;
         }
 
@@ -327,60 +316,59 @@
             padding: 12px 16px;
             margin-top: 8px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
         }
 
         .btn:disabled {
             opacity: 0.4;
             cursor: not-allowed;
-            transform: none !important;
         }
 
         .btn-primary { 
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
+            background: var(--primary); 
             color: #ffffff; 
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); 
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); 
         }
 
         .btn-excel { 
             background: #16a34a; 
             color: #ffffff; 
-            box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2); 
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25); 
         }
 
         .btn-pdf { 
             background: #dc2626; 
             color: #ffffff; 
-            box-shadow: 0 4px 10px rgba(220, 38, 38, 0.2); 
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25); 
         }
 
         .btn-wa { 
-            background: #16a34a; 
+            background: var(--whatsapp); 
             color: #ffffff; 
-            box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2); 
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25); 
         }
 
         .btn-backup { 
-            background: #4f46e5; 
+            background: #6366f1; 
             color: #ffffff; 
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); 
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25); 
         }
         
         .btn-accent { 
             background: #0f172a; 
             color: #ffffff; 
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12); 
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); 
         }
         
         .btn-danger { 
-            background: #e11d48; 
+            background: var(--rose); 
             color: #ffffff; 
             box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
         }
         
         .btn-delete {
-            background: #ffe4e6;
-            color: #e11d48;
+            background: var(--rose-light);
+            color: var(--rose);
             padding: 6px 12px;
             border-radius: 8px;
             font-size: 0.70rem;
@@ -395,12 +383,6 @@
             padding: 6px 14px;
             border-radius: 20px;
             cursor: pointer;
-            border: 1px solid rgba(37, 99, 235, 0.15);
-            transition: background 0.2s ease;
-        }
-
-        .auth-status:hover {
-            background: #dbeafe;
         }
 
         .list-row {
@@ -411,7 +393,7 @@
             border-bottom: 1px solid var(--border-color);
             font-size: 0.82rem;
             width: 100%;
-            gap: 8px;
+            gap: 6px;
         }
 
         .list-row:last-child {
@@ -419,28 +401,25 @@
         }
 
         .badge {
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: 20px;
             font-weight: 800;
-            font-size: 0.68rem;
+            font-size: 0.70rem;
             white-space: nowrap;
             letter-spacing: 0.2px;
         }
 
         .badge-optimo { 
-            background: #ecfdf5; 
-            color: #047857; 
-            border: 1px solid #a7f3d0;
+            background: var(--teal-light); 
+            color: var(--teal); 
         }
         .badge-aceptable { 
-            background: #fffbeb; 
-            color: #b45309; 
-            border: 1px solid #fde68a;
+            background: var(--amber-light); 
+            color: var(--amber); 
         }
         .badge-bajo { 
-            background: #fff1f2; 
-            color: #be123c; 
-            border: 1px solid #fecdd3;
+            background: var(--rose-light); 
+            color: var(--rose); 
         }
 
         .kpi-card {
@@ -448,8 +427,7 @@
             border-radius: 12px;
             padding: 10px 6px;
             text-align: center;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-subtle);
+            border: 1px solid #e2e8f0;
         }
 
         .kpi-title { 
@@ -457,14 +435,13 @@
             color: var(--text-secondary); 
             font-weight: 800; 
             text-transform: uppercase; 
-            letter-spacing: 0.3px;
         }
         
         .kpi-value { 
             font-size: 0.95rem; 
             font-weight: 800; 
-            color: var(--primary); 
-            margin-top: 3px; 
+            color: var(--teal); 
+            margin-top: 2px; 
         }
 
         .history-card {
@@ -472,7 +449,7 @@
             border-radius: 12px;
             padding: 12px;
             margin-bottom: 10px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #e2e8f0;
         }
 
         .history-card h4 {
@@ -483,9 +460,9 @@
 
         #toast {
             visibility: hidden;
-            min-width: 240px;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(12px);
+            min-width: 220px;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(10px);
             color: #ffffff;
             text-align: center;
             border-radius: 30px;
@@ -495,9 +472,9 @@
             left: 50%;
             bottom: 85px;
             transform: translateX(-50%);
-            font-size: 0.78rem;
+            font-size: 0.80rem;
             font-weight: 700;
-            box-shadow: var(--shadow-float);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         }
 
         #toast.show {
@@ -512,8 +489,8 @@
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(8px);
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(6px);
             z-index: 200;
             align-items: center;
             justify-content: center;
@@ -528,15 +505,14 @@
             background: #ffffff;
             border-radius: var(--radius-main);
             box-shadow: var(--shadow-float);
-            padding: 24px;
+            padding: 22px;
             width: 100%;
-            max-width: 380px;
-            animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid var(--border-color);
+            max-width: 360px;
+            animation: modalPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @keyframes modalPop {
-            from { transform: scale(0.92); opacity: 0; }
+            from { transform: scale(0.9); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
 
@@ -548,7 +524,7 @@
 
         .password-toggle {
             position: absolute;
-            right: 12px;
+            right: 10px;
             background: none;
             border: none;
             cursor: pointer;
@@ -561,9 +537,8 @@
 
         .motivo-tag {
             font-size: 0.65rem;
-            color: #b45309;
-            background: #fffbeb;
-            border: 1px solid #fde68a;
+            color: var(--amber);
+            background: var(--amber-light);
             padding: 2px 6px;
             border-radius: 6px;
             font-weight: 700;
@@ -571,15 +546,15 @@
             margin-top: 3px;
         }
 
-        /* Estilos NFC */
+        /* Estilos específicos NFC */
         .nfc-banner {
             background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
             color: white;
-            padding: 18px;
+            padding: 16px;
             border-radius: var(--radius-card);
             text-align: center;
-            margin-bottom: 16px;
-            box-shadow: 0 8px 20px rgba(3, 105, 161, 0.25);
+            margin-bottom: 14px;
+            box-shadow: 0 4px 14px rgba(3, 105, 161, 0.25);
         }
 
         .nfc-status-pulse {
@@ -605,7 +580,7 @@
 
         .jaula-counter-input {
             width: 70px !important;
-            height: 36px !important;
+            height: 34px !important;
             font-size: 0.9rem !important;
             text-align: center;
             padding: 2px !important;
@@ -774,7 +749,7 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label>ID Maquinaria</label>
-                        <input type="text" id="admin-new-id" placeholder="Ej: 11-41 o 07-225">
+                        <input type="text" id="admin-new-id" placeholder="Ej: 11-41 o 07-12">
                     </div>
                     <div class="form-group">
                         <label>Código Operador</label>
@@ -880,13 +855,6 @@
     </div>
 
     <script>
-        // Registro de Service Worker para PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW reg error:', err));
-            });
-        }
-
         const firebaseConfig = {
             apiKey: "AIzaSyB0Va-EKo80zgIMAObFhaXiw30TEAHZkvU", 
             authDomain: "eficiencia-d5aeb.firebaseapp.com",
@@ -907,21 +875,11 @@
         let catalogoMaquinas = [];
         let equiposTurno = [];
         let datosSemanalesExportar = [];
-        let kpisSemanaActual = {
-            semana: 0,
-            promEfiA: '0.0',
-            promEfiT: '0.0',
-            totalTons: 0,
-            hrsEfectivas: '0.0',
-            hrsNoEfectivas: '0.0',
-            pesoPromedio: '0.0'
-        };
+        let kpisSemanaActual = {};
 
         // Configuración para el escáner de Jaulas NFC
         let ndefReaderInstance = null;
         let totalEscaneosNFC = 0;
-        
-        // Objeto dinámico que almacenará cualquier equipo que se agregue o escanee
         let conteoJaulasNFC = {
             '11-41': { jaulas: 0, lecturas: 0, pesoJaula: 27 },
             '11-45': { jaulas: 0, lecturas: 0, pesoJaula: 27 },
@@ -941,9 +899,9 @@
         function initIndexedDB() {
             const request = indexedDB.open("EficienciasLocalStoreDB", 1);
             request.onupgradeneeded = (e) => {
-                const dbInstance = e.target.result;
-                if (!dbInstance.objectStoreNames.contains("turnos_pendientes")) {
-                    dbInstance.createObjectStore("turnos_pendientes", { keyPath: "id", autoIncrement: true });
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains("turnos_pendientes")) {
+                    db.createObjectStore("turnos_pendientes", { keyPath: "id", autoIncrement: true });
                 }
             };
             request.onsuccess = (e) => {
@@ -1007,7 +965,7 @@
                     await db.ref('turnos').push(registroTurno);
                     
                     registroTurno.equipos.forEach(eq => {
-                        const tonCargadas = (parseFloat(eq.jaulas) || 0) * (parseFloat(eq.pesoJaula) || 0);
+                        const tonCargadas = eq.jaulas * eq.pesoJaula;
                         const keyUnica = eq.id + '_' + (eq.operador || 'sincod');
                         db.ref('toneladas_acumuladas/' + keyUnica).transaction(current => (current || 0) + tonCargadas);
                     });
@@ -1028,7 +986,6 @@
 
         function actualizarBadgeRed(isOnline, cantidadPendientes = 0) {
             const badge = document.getElementById('network-badge');
-            if(!badge) return;
             if (isOnline) {
                 if (cantidadPendientes > 0) {
                     badge.className = "offline-status-badge offline";
@@ -1050,7 +1007,7 @@
         });
 
         /* ==========================================================
-           2. MÓDULO NFC & CONTEO DE JAULAS (LÓGICA DINÁMICA DE DETECCIÓN)
+           2. MÓDULO NFC & CONTEO DE JAULAS
            ========================================================== */
         async function iniciarEscanerNFC() {
             if (!('NDEFReader' in window)) {
@@ -1068,9 +1025,9 @@
                 const statusText = document.getElementById('nfc-status-text');
                 const btn = document.getElementById('btn-toggle-nfc');
 
-                if(indicator) indicator.classList.remove('inactive');
-                if(statusText) statusText.innerText = "Escaneando... Acerca la etiqueta NFC a la parte trasera.";
-                if(btn) btn.style.display = "none";
+                indicator.classList.remove('inactive');
+                statusText.innerText = "Escaneando... Acerca la etiqueta NFC a la parte trasera.";
+                btn.style.display = "none";
 
                 showToast("📡 Escáner NFC Activado");
 
@@ -1106,6 +1063,7 @@
             }
         }
 
+        // Función auxiliar para contar ocurrencias exactas de un patrón dentro del texto NFC
         function contarOcurrencias(texto, patron) {
             if (!texto || !patron) return 0;
             const patronEscapado = patron.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -1120,21 +1078,11 @@
             const textoLimpio = rawText.toUpperCase().trim();
 
             let idsABuscar = Object.keys(conteoJaulasNFC);
-            
             catalogoMaquinas.forEach(m => {
                 if (m.maquinaria_id && !idsABuscar.includes(m.maquinaria_id)) {
                     idsABuscar.push(m.maquinaria_id);
                 }
             });
-
-            const patronesEncontrados = textoLimpio.match(/\b\d{2}-\d{2,3}\b/g);
-            if (patronesEncontrados) {
-                patronesEncontrados.forEach(idMatch => {
-                    if (!idsABuscar.includes(idMatch)) {
-                        idsABuscar.push(idMatch);
-                    }
-                });
-            }
 
             idsABuscar.sort((a, b) => b.length - a.length);
 
@@ -1157,21 +1105,9 @@
                     conteoJaulasNFC[idEq].jaulas += jaulasASumar;
                     conteoJaulasNFC[idEq].lecturas += cantidadOcurrencias;
 
-                    resumenEscaneo.push(`${idEq} (+${cantidadOcurrencias})`);
+                    resumenEscaneo.push(`${idEq} (x${cantidadOcurrencias})`);
                 }
             });
-
-            if (!seEncontroAlguno) {
-                const idDirecto = cleanFirebaseKey(textoLimpio);
-                if (!conteoJaulasNFC[idDirecto]) {
-                    conteoJaulasNFC[idDirecto] = { jaulas: 0, lecturas: 0, pesoJaula: 27 };
-                }
-                let jaulasPorUnidad = idDirecto.startsWith("07-") ? 2 : 1;
-                conteoJaulasNFC[idDirecto].jaulas += jaulasPorUnidad;
-                conteoJaulasNFC[idDirecto].lecturas += 1;
-                resumenEscaneo.push(`${idDirecto} (+1)`);
-                seEncontroAlguno = true;
-            }
 
             if (seEncontroAlguno) {
                 totalEscaneosNFC += 1;
@@ -1180,12 +1116,13 @@
                 }
                 showToast(`🚜 Escaneado: ${resumenEscaneo.join(', ')}`);
                 renderConteoJaulas();
+            } else {
+                showToast(`⚠️ No se reconoció maquinaria en: "${rawText}"`);
             }
         }
 
         function renderConteoJaulas() {
             const container = document.getElementById('lista-conteo-jaulas-nfc');
-            if(!container) return;
             let totalJaulasSuma = 0;
 
             container.innerHTML = '';
@@ -1235,27 +1172,22 @@
            ========================================================== */
         function showToast(msj) {
             const t = document.getElementById("toast");
-            if (!t) return;
             t.innerText = msj;
             t.className = "show";
             setTimeout(() => { t.className = t.className.replace("show", ""); }, 3500);
         }
 
         function cleanFirebaseKey(key) {
-            if (!key) return "";
             return key.replace(/[\.\#\$\/\[\]]/g, "_");
         }
 
         function togglePasswordVisibility() {
             const passInput = document.getElementById('input-pass');
-            if (passInput) {
-                passInput.type = (passInput.type === 'password') ? 'text' : 'password';
-            }
+            passInput.type = (passInput.type === 'password') ? 'text' : 'password';
         }
 
         function triggerHeaderTractorAnimation() {
             const tractorEl = document.getElementById('header-tractor-banner');
-            if (!tractorEl) return;
             tractorEl.classList.remove('animate-login');
             void tractorEl.offsetWidth;
             tractorEl.classList.add('animate-login');
@@ -1355,18 +1287,13 @@
             const data = snapshot.val();
             for (let id in data) {
                 catalogoMaquinas.push({ key: id, ...data[id] });
-                if (data[id].maquinaria_id && !conteoJaulasNFC[data[id].maquinaria_id]) {
-                    conteoJaulasNFC[data[id].maquinaria_id] = { jaulas: 0, lecturas: 0, pesoJaula: 27 };
-                }
             }
             renderCatalogoAdmin();
             renderEquipos();
-            renderConteoJaulas();
         });
 
         function renderCatalogoAdmin() {
             const container = document.getElementById('lista-catalogo-admin');
-            if(!container) return;
             container.innerHTML = '';
             if (catalogoMaquinas.length === 0) {
                 container.innerHTML = `<p style="font-size:0.75rem; color:var(--text-secondary);">No hay maquinarias registradas.</p>`;
@@ -1415,7 +1342,6 @@
 
         function renderEquipos() {
             const container = document.getElementById('equipos-container');
-            if(!container) return;
             container.innerHTML = '';
 
             equiposTurno.forEach((eq, index) => {
@@ -1426,7 +1352,7 @@
 
                 const hrEfectivas = Math.max(0, hrTrab - hrNoEfect);
                 const toneladas = jaulas * pesoJaula;
-                const eficiencia = hrEfectivas > 0 ? (toneladas / hrEfectivas).toFixed(2) : '0.00';
+                const eficiencia = hrEfectivas > 0 ? (toneladas / hrEfectivas).toFixed(2) : 0;
 
                 let optHtml = catalogoMaquinas.map(m => `<option value="${m.maquinaria_id}|${m.operador}" ${(m.maquinaria_id === eq.id && m.operador === eq.operador) ? 'selected':''}>${m.maquinaria_id} (Op: ${m.operador})</option>`).join('');
 
@@ -1505,7 +1431,7 @@
 
             const hrEfectivas = Math.max(0, hrTrab - hrNoEfect);
             const toneladas = jaulas * pesoJaula;
-            const eficiencia = hrEfectivas > 0 ? (toneladas / hrEfectivas).toFixed(2) : '0.00';
+            const eficiencia = hrEfectivas > 0 ? (toneladas / hrEfectivas).toFixed(2) : 0;
 
             card.querySelector('.calc-href').value = hrEfectivas.toFixed(1);
             card.querySelector('.calc-efi').value = eficiencia;
@@ -1593,8 +1519,7 @@
         function cargarEfiSemanal() {
             const fechaActual = new Date();
             const numSemana = getSemanaNumero(fechaActual);
-            const lblSemana = document.getElementById('lbl-semana-actual');
-            if(lblSemana) lblSemana.innerText = "Semana " + numSemana;
+            document.getElementById('lbl-semana-actual').innerText = "Semana " + numSemana;
 
             db.ref('turnos').orderByChild('semana').equalTo(numSemana - 1).once('value', snapshotDom => {
                 const dataDom = snapshotDom.val();
@@ -1606,10 +1531,9 @@
                         const dFecha = new Date(t.fecha);
                         if ((dFecha.getUTCDay() === 0 || t.turno === 'NOCTURNO') && t.turno === 'NOCTURNO') {
                             t.equipos.forEach(eq => {
-                                const hrTrab = parseFloat(eq.hrTrab) || 0;
-                                const hrNoEf = parseFloat(eq.hrNoEfect) || 0;
-                                const hrEf = Math.max(0, hrTrab - hrNoEf);
-                                const ton = (parseFloat(eq.jaulas) || 0) * (parseFloat(eq.pesoJaula) || 0);
+                                const hrEf = Math.max(0, eq.hrTrab - eq.hrNoEfect);
+                                const hrNoEf = Math.max(0, eq.hrNoEfect);
+                                const ton = eq.jaulas * eq.pesoJaula;
                                 const claveIdOp = eq.operador ? `${eq.id}_${eq.operador}` : eq.id;
 
                                 if (!arrastreDomingo[claveIdOp]) {
@@ -1618,11 +1542,11 @@
                                 arrastreDomingo[claveIdOp].ton += ton;
                                 arrastreDomingo[claveIdOp].hrs += hrEf;
                                 arrastreDomingo[claveIdOp].noHrs += hrNoEf;
-                                arrastreDomingo[claveIdOp].hrTrab += hrTrab;
+                                arrastreDomingo[claveIdOp].hrTrab += eq.hrTrab || 0;
                                 if (eq.motivoNoEfect && eq.motivoNoEfect !== 'Ninguno') {
                                     arrastreDomingo[claveIdOp].motivos[eq.motivoNoEfect] = (arrastreDomingo[claveIdOp].motivos[eq.motivoNoEfect] || 0) + hrNoEf;
                                 }
-                                if (eq.pesoJaula > 0) arrastreDomingo[claveIdOp].pesos.push(parseFloat(eq.pesoJaula));
+                                if (eq.pesoJaula > 0) arrastreDomingo[claveIdOp].pesos.push(eq.pesoJaula);
                             });
                         }
                     }
@@ -1640,10 +1564,9 @@
                         if (data[key].archivado) continue;
 
                         data[key].equipos.forEach(eq => {
-                            const hrTrab = parseFloat(eq.hrTrab) || 0;
-                            const hrNoEf = parseFloat(eq.hrNoEfect) || 0;
-                            const hrEf = Math.max(0, hrTrab - hrNoEf);
-                            const ton = (parseFloat(eq.jaulas) || 0) * (parseFloat(eq.pesoJaula) || 0);
+                            const hrEf = Math.max(0, eq.hrTrab - eq.hrNoEfect);
+                            const hrNoEf = Math.max(0, eq.hrNoEfect);
+                            const ton = eq.jaulas * eq.pesoJaula;
                             const claveIdOp = eq.operador ? `${eq.id}_${eq.operador}` : eq.id;
 
                             if(!acumulado[claveIdOp]) {
@@ -1653,11 +1576,11 @@
                             acumulado[claveIdOp].ton += ton;
                             acumulado[claveIdOp].hrs += hrEf;
                             acumulado[claveIdOp].noHrs += hrNoEf;
-                            acumulado[claveIdOp].hrTrab += hrTrab;
+                            acumulado[claveIdOp].hrTrab += eq.hrTrab || 0;
                             if (eq.motivoNoEfect && eq.motivoNoEfect !== 'Ninguno') {
                                 acumulado[claveIdOp].motivos[eq.motivoNoEfect] = (acumulado[claveIdOp].motivos[eq.motivoNoEfect] || 0) + hrNoEf;
                             }
-                            if(eq.pesoJaula > 0) acumulado[claveIdOp].pesos.push(parseFloat(eq.pesoJaula));
+                            if(eq.pesoJaula > 0) acumulado[claveIdOp].pesos.push(eq.pesoJaula);
                         });
                     }
 
@@ -1698,7 +1621,6 @@
                     };
 
                     const list = document.getElementById('lista-efi-semanal');
-                    if(!list) return;
                     list.innerHTML = '';
                     for(let clave in acumulado) {
                         let item = acumulado[clave];
@@ -1764,16 +1686,16 @@
             const numSemana = kpisSemanaActual.semana || getSemanaNumero(new Date());
             let mensaje = `*🚜 CONTROL DE EFICIENCIAS - SEMANA ${numSemana}*\n`;
             mensaje += `\n*📊 RESUMEN GENERAL:*`;
-            mensaje += `\n- Prom. Efi Alzadoras: ${kpisSemanaActual.promEfiA || '0.0'} T/h`;
-            mensaje += `\n- Prom. Efi Tractores: ${kpisSemanaActual.promEfiT || '0.0'} T/h`;
-            mensaje += `\n- Total Tons Cargadas: ${kpisSemanaActual.totalTons || 0} T`;
-            mensaje += `\n- Horas Efectivas: ${kpisSemanaActual.hrsEfectivas || '0.0'} h`;
-            mensaje += `\n- Horas No Efectivas: ${kpisSemanaActual.hrsNoEfectivas || '0.0'} h\n`;
+            mensaje += `\n- Prom. Efi Alzadoras: ${kpisSemanaActual.promEfiA} T/h`;
+            mensaje += `\n- Prom. Efi Tractores: ${kpisSemanaActual.promEfiT} T/h`;
+            mensaje += `\n- Total Tons Cargadas: ${kpisSemanaActual.totalTons} T`;
+            mensaje += `\n- Horas Efectivas: ${kpisSemanaActual.hrsEfectivas} h`;
+            mensaje += `\n- Horas No Efectivas: ${kpisSemanaActual.hrsNoEfectivas} h\n`;
             mensaje += `\n*📋 DETALLE POR EQUIPO:*`;
 
             datosSemanalesExportar.forEach(eq => {
                 mensaje += `\n------------------------------`;
-                mensaje += `\n⚙️ *Equipo:* ${eq.idEquipo}`;
+                mensaje += `\n⚙️️ *Equipo:* ${eq.idEquipo}`;
                 mensaje += `\n👤 *Op:* ${eq.operador}`;
                 mensaje += `\n📈 *Eficiencia:* ${eq.eficiencia} Ton/Hr`;
                 mensaje += `\n⏱️ *Hrs Trab:* ${eq.horasTrabajadas}h | *No Efec:* ${eq.horasNoEfectivas}h`;
@@ -1820,12 +1742,12 @@
                 ["Fecha de Generación:", new Date().toLocaleString()],
                 [],
                 ["INDICADOR KPI", "VALOR REGISTRADO"],
-                ["Promedio Eficiencia Alzadoras (11-)", parseFloat(kpisSemanaActual.promEfiA || 0)],
-                ["Promedio Eficiencia Tractores (07-)", parseFloat(kpisSemanaActual.promEfiT || 0)],
-                ["Total Toneladas Cargadas", kpisSemanaActual.totalTons || 0],
-                ["Total Horas Efectivas", parseFloat(kpisSemanaActual.hrsEfectivas || 0)],
-                ["Total Horas No Efectivas", parseFloat(kpisSemanaActual.hrsNoEfectivas || 0)],
-                ["Peso Promedio por Jaula (Tons)", parseFloat(kpisSemanaActual.pesoPromedio || 0)]
+                ["Promedio Eficiencia Alzadoras (11-)", parseFloat(kpisSemanaActual.promEfiA)],
+                ["Promedio Eficiencia Tractores (07-)", parseFloat(kpisSemanaActual.promEfiT)],
+                ["Total Toneladas Cargadas", kpisSemanaActual.totalTons],
+                ["Total Horas Efectivas", parseFloat(kpisSemanaActual.hrsEfectivas)],
+                ["Total Horas No Efectivas", parseFloat(kpisSemanaActual.hrsNoEfectivas)],
+                ["Peso Promedio por Jaula (Tons)", parseFloat(kpisSemanaActual.pesoPromedio)]
             ];
             const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
             XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen KPI");
@@ -1877,13 +1799,13 @@
             doc.setFontSize(8);
             doc.setFont("helvetica", "bold");
             
-            doc.text(`Prom. Efi A (11-): ${kpisSemanaActual.promEfiA || '0.0'} T/h`, 20, 46);
-            doc.text(`Prom. Efi T (07-): ${kpisSemanaActual.promEfiT || '0.0'} T/h`, 80, 46);
-            doc.text(`Total Tons: ${kpisSemanaActual.totalTons || 0} T`, 140, 46);
+            doc.text(`Prom. Efi A (11-): ${kpisSemanaActual.promEfiA} T/h`, 20, 46);
+            doc.text(`Prom. Efi T (07-): ${kpisSemanaActual.promEfiT} T/h`, 80, 46);
+            doc.text(`Total Tons: ${kpisSemanaActual.totalTons} T`, 140, 46);
 
-            doc.text(`Hrs Efectivas: ${kpisSemanaActual.hrsEfectivas || '0.0'} h`, 20, 58);
-            doc.text(`Hrs No Efectivas: ${kpisSemanaActual.hrsNoEfectivas || '0.0'} h`, 80, 58);
-            doc.text(`Peso Prom. Jaula: ${kpisSemanaActual.pesoPromedio || '0.0'} T`, 140, 58);
+            doc.text(`Hrs Efectivas: ${kpisSemanaActual.hrsEfectivas} h`, 20, 58);
+            doc.text(`Hrs No Efectivas: ${kpisSemanaActual.hrsNoEfectivas} h`, 80, 58);
+            doc.text(`Peso Prom. Jaula: ${kpisSemanaActual.pesoPromedio} T`, 140, 58);
 
             const tableBody = datosSemanalesExportar.map(d => [
                 d.idEquipo,
@@ -1912,7 +1834,7 @@
             const numSemana = getSemanaNumero(new Date());
             const listData = [];
             document.querySelectorAll('#lista-efi-semanal .list-row').forEach(row => {
-                listData.push(row.innerText.replace(/\n/g, ' '));
+                listData.push(row.innerText.replace('\n', ' '));
             });
 
             db.ref('historial_semanal/Semana_' + numSemana).set({
@@ -1925,7 +1847,6 @@
             db.ref('toneladas_acumuladas').on('value', snapshot => {
                 const tonsData = snapshot.val() || {};
                 const list = document.getElementById('lista-tons-acumuladas');
-                if(!list) return;
                 list.innerHTML = '';
 
                 for(let key in tonsData) {
@@ -1953,7 +1874,6 @@
                     if (data[key].semana) semanas.add(data[key].semana);
                 }
                 const select = document.getElementById('select-admin-semana');
-                if(!select) return;
                 select.innerHTML = '';
                 if (semanas.size === 0) {
                     select.innerHTML = '<option value="">Sin semanas registradas</option>';
@@ -1966,15 +1886,12 @@
         }
 
         function consultarDetalleSemanaAdmin() {
-            const select = document.getElementById('select-admin-semana');
-            if(!select || !select.value) return showToast("Seleccione una semana válida");
-
-            const sem = parseInt(select.value);
+            const sem = parseInt(document.getElementById('select-admin-semana').value);
+            if (!sem) return showToast("Seleccione una semana válida");
 
             db.ref('turnos').orderByChild('semana').equalTo(sem).once('value', snapshot => {
                 const data = snapshot.val();
                 const container = document.getElementById('contenedor-historial-admin');
-                if(!container) return;
                 container.innerHTML = '';
 
                 if (!data) {
@@ -1986,17 +1903,15 @@
                     const t = data[key];
                     let eqHtml = '';
                     t.equipos.forEach(eq => {
-                        const hrTrab = parseFloat(eq.hrTrab) || 0;
-                        const hrNoEf = parseFloat(eq.hrNoEfect) || 0;
-                        const hrEf = Math.max(0, hrTrab - hrNoEf);
-                        const ton = (parseFloat(eq.jaulas) || 0) * (parseFloat(eq.pesoJaula) || 0);
-                        const efi = hrEf > 0 ? (ton / hrEf).toFixed(2) : '0.00';
+                        const hrEf = Math.max(0, eq.hrTrab - eq.hrNoEfect);
+                        const ton = eq.jaulas * eq.pesoJaula;
+                        const efi = hrEf > 0 ? (ton / hrEf).toFixed(2) : 0;
                         const labelOp = eq.operador ? ` | Op: ${eq.operador}` : '';
                         const motivoStr = (eq.motivoNoEfect && eq.motivoNoEfect !== 'Ninguno') ? ` | Motivo: ${eq.motivoNoEfect}` : '';
 
                         eqHtml += `
                             <div class="list-row" style="font-size:0.75rem;">
-                                <span>ID: <strong>${eq.id}</strong>${labelOp} | Trab: ${hrTrab}h | Efec: ${hrEf.toFixed(1)}h${motivoStr}</span>
+                                <span>ID: <strong>${eq.id}</strong>${labelOp} | Trab: ${eq.hrTrab}h | Efec: ${hrEf.toFixed(1)}h${motivoStr}</span>
                                 <span class="badge badge-optimo">Ton: ${ton} | Efi: ${efi}</span>
                             </div>
                         `;
@@ -2039,15 +1954,16 @@
                     btn.disabled = false;
                     btn.innerText = "Sí, Borrar Todo a 0";
                     cerrarModalResetBD();
-                    showToast("Base de datos reiniciada a 0");
+                    showToast("Base de datos formateada a 0 correctamente");
                     cargarEfiSemanal();
                     cargarTonsAcumuladas();
+                    cargarSemanasDisponiblesAdmin();
                 })
-                .catch((err) => {
+                .catch((error) => {
                     btn.disabled = false;
                     btn.innerText = "Sí, Borrar Todo a 0";
-                    showToast("Error al reiniciar base de datos");
-                    console.error(err);
+                    console.error("Error al resetear la base de datos:", error);
+                    showToast("Error al formatear la base de datos");
                 });
         }
     </script>
