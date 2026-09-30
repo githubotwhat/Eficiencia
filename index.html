@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Control de Eficiencias Maquinaria Pro</title>
+
+    <!-- SDK Firebase JS (v9 Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <!-- Librerías de Exportación Avanzada (PDF + Excel) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #f1f5f9;
+            --surface: #ffffff;
+            --surface-variant: #f8fafc;
+            --border-color: #cbd5e1;
+            
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #eff6ff;
+            
+            --teal: #0d9488;
+            --teal-light: #ccfbf1;
+            --amber: #d97706;
+            --amber-light: #fef3c7;
+            --rose: #e11d48;
+            --rose-light: #ffe4e6;
+            --whatsapp: #25d366;
+            --whatsapp-dark: #128c7e;
+            
+            --radius-main: 22px;
+            --radius-card: 16px;
+            --radius-input: 12px;
+            --shadow-app: 0 4px 15px -2px rgba(15, 23, 42, 0.06);
+            --shadow-float: 0 12px 28px -6px rgba(15, 23, 42, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            padding-bottom: 95px;
+            padding-top: env(safe-area-inset-top);
+            user-select: none;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        header .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary) 0%, #06b6d4 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        header h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            color: var(--text-primary);
+        }
+
+        .offline-status-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--teal-light);
+            color: var(--teal);
+        }
+
+        .offline-status-badge.offline {
+            background: var(--amber-light);
+            color: var(--amber);
+        }
+
+        #header-tractor-banner {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            right: -50px;
+            font-size: 1.4rem;
+            display: none;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        #header-tractor-banner.animate-login {
+            display: block;
+            animation: driveHeaderOnce 3.5s ease-in-out forwards;
+        }
+
+        @keyframes driveHeaderOnce {
+            0% { right: -50px; }
+            100% { right: 105%; }
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+            z-index: 150;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 6px 0;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            font-size: 0.62rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 1.2rem;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        .nav-item.active .nav-icon {
+            transform: translateY(-2px);
+        }
+
+        .container {
+            padding: 16px 14px;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-card);
+            padding: 16px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-app);
+            width: 100%;
+        }
+
+        .card-compact {
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .grid-5-kpi {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        @media (min-width: 480px) {
+            .grid-5-kpi {
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+            }
+        }
+
+        .grid-compact-inputs {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 8px;
+            min-width: 0;
+            position: relative;
+        }
+
+        .form-group label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .form-group input, .form-group select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-input);
+            font-size: 0.85rem;
+            outline: none;
+            background: var(--surface-variant);
+            color: var(--text-primary);
+            height: 42px;
+            font-weight: 600;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .form-group input:focus, .form-group select:focus, textarea:focus {
+            border-color: var(--primary);
+            background: #ffffff;
+        }
+
+        .calc-field {
+            background: #f0fdf4 !important;
+            font-weight: 800 !important;
+            color: var(--teal) !important;
+            border-color: #bbf7d0 !important;
+            text-align: center;
+        }
+
+        button, .btn {
+            border: none;
+            border-radius: var(--radius-input);
+            font-weight: 700;
+            font-size: 0.80rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        button:active, .btn:active {
+            transform: scale(0.96) !important;
+            opacity: 0.9;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 16px;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary { 
+            background: var(--primary); 
+            color: #ffffff; 
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); 
+        }
+
+        .btn-excel { 
+            background: #16a34a; 
+            color: #ffffff; 
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25); 
+        }
+
+        .btn-pdf { 
+            background: #dc2626; 
+            color: #ffffff; 
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25); 
+        }
+
+        .btn-wa { 
+            background: var(--whatsapp); 
+            color: #ffffff; 
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25); 
+        }
+
+        .btn-backup { 
+            background: #6366f1; 
+            color: #ffffff; 
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25); 
+        }
+        
+        .btn-accent { 
+            background: #0f172a; 
+            color: #ffffff; 
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); 
+        }
+        
+        .btn-danger { 
+            background: var(--rose); 
+            color: #ffffff; 
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
+        }
+        
+        .btn-delete {
+            background: var(--rose-light);
+            color: var(--rose);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.70rem;
+            font-weight: 700;
+        }
+
+        .auth-status {
+            font-size: 0.72rem;
+            font-weight: 800;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .list-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.82rem;
+            width: 100%;
+            gap: 6px;
+        }
+
+        .list-row:last-child {
+            border-bottom: none;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.70rem;
+            white-space: nowrap;
+            letter-spacing: 0.2px;
+        }
+
+        .badge-optimo { 
+            background: var(--teal-light); 
+            color: var(--teal); 
+        }
+        .badge-aceptable { 
+            background: var(--amber-light); 
+            color: var(--amber); 
+        }
+        .badge-bajo { 
+            background: var(--rose-light); 
+            color: var(--rose); 
+        }
+
+        .kpi-card {
+            background: var(--surface-variant);
+            border-radius: 12px;
+            padding: 10px 6px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .kpi-title { 
+            font-size: 0.58rem; 
+            color: var(--text-secondary); 
+            font-weight: 800; 
+            text-transform: uppercase; 
+        }
+        
+        .kpi-value { 
+            font-size: 0.95rem; 
+            font-weight: 800; 
+            color: var(--teal); 
+            margin-top: 2px; 
+        }
+
+        .history-card {
+            background: var(--surface-variant);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .history-card h4 {
+            font-size: 0.82rem;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        #toast {
+            visibility: hidden;
+            min-width: 220px;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(10px);
+            color: #ffffff;
+            text-align: center;
+            border-radius: 30px;
+            padding: 12px 20px;
+            position: fixed;
+            z-index: 300;
+            left: 50%;
+            bottom: 85px;
+            transform: translateX(-50%);
+            font-size: 0.80rem;
+            font-weight: 700;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        }
+
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.3s, fadeout 0.3s 2.7s;
+        }
+
+        @keyframes fadein { from { bottom: 65px; opacity: 0; } to { bottom: 85px; opacity: 1; } }
+        @keyframes fadeout { from { bottom: 85px; opacity: 1; } to { bottom: 65px; opacity: 0; } }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(6px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal.open {
+            display: flex !important;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: var(--radius-main);
+            box-shadow: var(--shadow-float);
+            padding: 22px;
+            width: 100%;
+            max-width: 360px;
+            animation: modalPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        .motivo-tag {
+            font-size: 0.65rem;
+            color: var(--amber);
+            background: var(--amber-light);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 3px;
+        }
+
+        /* Estilos específicos NFC */
+        .nfc-banner {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: white;
+            padding: 16px;
+            border-radius: var(--radius-card);
+            text-align: center;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 14px rgba(3, 105, 161, 0.25);
+        }
+
+        .nfc-status-pulse {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            animation: pulse 1.6s infinite;
+        }
+
+        .nfc-status-pulse.inactive {
+            background-color: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        .jaula-counter-input {
+            width: 70px !important;
+            height: 34px !important;
+            font-size: 0.9rem !important;
+            text-align: center;
+            padding: 2px !important;
+            margin: 0 !important;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <div class="brand-icon">🚜</div>
+            <div>
+                <h2>Eficiencias Pro</h2>
+                <span id="network-badge" class="offline-status-badge">🟢 Online</span>
+            </div>
+        </div>
+        <div id="header-tractor-banner">🚜</div>
+        <div class="auth-status" id="auth-btn" onclick="toggleAuthModal()">Login Admin</div>
+    </header>
+
+    <div class="container">
+
+        <!-- 1. VISTA: EFI SEMANAL (PÚBLICA) -->
+        <div id="sec-semanal" class="view-section active">
+            <div class="card">
+                <div class="card-title">
+                    <span id="lbl-semana-actual">Semana --</span>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button class="btn-wa" id="btn-exportar-wa" style="padding: 6px 10px; font-size: 0.70rem; border-radius: 8px;" onclick="enviarWhatsAppResumen()">📲 WhatsApp</button>
+                        <button class="btn-excel" id="btn-exportar-excel" style="padding: 6px 10px; font-size: 0.70rem; border-radius: 8px; display:none;" onclick="exportarExcelAvanzado()">📗 Excel</button>
+                        <button class="btn-pdf" id="btn-exportar-pdf" style="padding: 6px 10px; font-size: 0.70rem; border-radius: 8px; display:none;" onclick="exportarPDFAvanzado()">📄 PDF Reporte</button>
+                        <button class="btn-primary" id="btn-guardar-semanal" style="padding: 6px 10px; font-size: 0.70rem; border-radius: 8px; display:none;" onclick="guardarSemanalFirebase()">Guardar Semana</button>
+                    </div>
+                </div>
+
+                <!-- Tarjetas KPI Resumen Ampliado -->
+                <div class="grid-5-kpi" style="margin-bottom: 12px;">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Prom. Efi. A</div>
+                        <div class="kpi-value" id="kpi-prom-efi-a">0.0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Prom. Efi. T</div>
+                        <div class="kpi-value" id="kpi-prom-efi-t" style="color: var(--primary);">0.0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Total Tons</div>
+                        <div class="kpi-value" id="kpi-total-tons">0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Hrs Efec.</div>
+                        <div class="kpi-value" id="kpi-total-hrs">0.0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Hrs No Efec.</div>
+                        <div class="kpi-value" id="kpi-no-hrs" style="color: var(--rose);">0.0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Peso Prom.</div>
+                        <div class="kpi-value" id="kpi-peso-prom" style="color: var(--primary);">0.0</div>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 10px;">Promedios acumulados de eficiencia de la semana activa (Incluye arrastre de Domingo Nocturno).</p>
+                <div id="lista-efi-semanal"></div>
+            </div>
+        </div>
+
+        <!-- 2. VISTA: TONS ACUMULADAS (PÚBLICA) -->
+        <div id="sec-tons" class="view-section">
+            <div class="card">
+                <div class="card-title">Acumulado de Toneladas Cargadas</div>
+                <div id="lista-tons-acumuladas"></div>
+            </div>
+        </div>
+
+        <!-- 3. VISTA: TOTAL JAULAS (ESCÁNER NFC) -->
+        <div id="sec-jaulas" class="view-section">
+            <div class="nfc-banner">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
+                    <span id="nfc-pulse-indicator" class="nfc-status-pulse inactive"></span>
+                    <h3 style="font-size: 1.05rem; font-weight: 800;">Conteo por NFC</h3>
+                </div>
+                <p id="nfc-status-text" style="font-size: 0.75rem; opacity: 0.95; margin-bottom: 12px;">El lector NFC está desactivado.</p>
+                <button class="btn" id="btn-toggle-nfc" style="background: #ffffff; color: #0369a1; font-weight: 800; width: auto; margin: 0 auto; padding: 8px 18px;" onclick="iniciarEscanerNFC()">
+                    📡 Activar Escáner NFC
+                </button>
+            </div>
+
+            <div class="card card-compact">
+                <div class="card-title">
+                    <span>Conteo de Jaulas por Escaneo</span>
+                    <button class="btn-delete" onclick="resetearConteoJaulas()">Reiniciar Conteo</button>
+                </div>
+                <p style="font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 10px;">
+                    Acerca una tarjeta NFC asignada a una maquinaria para sumar sus jaulas.
+                </p>
+
+                <div class="grid-2" style="margin-bottom: 12px;">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Total Jaulas</div>
+                        <div class="kpi-value" id="kpi-total-jaulas-nfc">0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Lecturas NFC</div>
+                        <div class="kpi-value" id="kpi-total-escaneos-nfc" style="color: var(--primary);">0</div>
+                    </div>
+                </div>
+
+                <div id="lista-conteo-jaulas-nfc"></div>
+            </div>
+        </div>
+
+        <!-- 4. VISTA: PANEL ADMINISTRACIÓN (PRIVADA - SOLO ADMIN) -->
+        <div id="sec-admin" class="view-section">
+            
+            <div class="card card-compact" id="card-datos-generales">
+                <div class="card-title">Datos Generales del Turno</div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Frente</label>
+                        <select id="frente">
+                            <option value="Frente 1">Frente 1</option>
+                            <option value="Frente 2">Frente 2</option>
+                            <option value="Frente 5">Frente 5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Finca</label>
+                        <input type="text" id="finca" value="San Carlos Gomez">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Fecha</label>
+                        <input type="date" id="fecha">
+                    </div>
+                    <div class="form-group">
+                        <label>Turno</label>
+                        <select id="turno">
+                            <option value="DIURNO">Diurno</option>
+                            <option value="NOCTURNO">Nocturno</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-compact">
+                <div class="card-title">Registro de Eficiencia por Equipo</div>
+                <div id="equipos-container"></div>
+
+                <div id="admin-actions">
+                    <button class="btn btn-accent" onclick="agregarFormMaquinaria()">+ Agregar Maquinaria al Turno</button>
+                    <button class="btn btn-primary" id="btn-guardar-turno" onclick="guardarTurnoInteligente()">💾 Guardar Turno</button>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <label style="font-size:0.65rem; color:var(--text-secondary); font-weight:700; text-transform:uppercase;">Observaciones del Turno</label>
+                    <textarea id="observaciones" style="width:100%; border-radius:10px; padding:8px; height:60px; outline:none; font-size:0.80rem; margin-top:4px;" placeholder="Agregar observaciones..."></textarea>
+                </div>
+            </div>
+
+            <div class="card card-compact">
+                <div class="card-title">Registro de Catálogo de Maquinarias</div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>ID Maquinaria</label>
+                        <input type="text" id="admin-new-id" placeholder="Ej: 11-41 o 7-225">
+                    </div>
+                    <div class="form-group">
+                        <label>Código Operador</label>
+                        <input type="text" id="admin-new-operador" placeholder="Ej: 2010002030">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="guardarCatalogoMaquinaria()">Guardar Maquinaria</button>
+            </div>
+
+            <div class="card card-compact">
+                <div class="card-title">Catálogo de Equipos Registrados</div>
+                <div id="lista-catalogo-admin"></div>
+            </div>
+
+            <div class="card card-compact">
+                <div class="card-title">Consulta Detallada de Historial Semanal</div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Seleccionar Semana</label>
+                        <select id="select-admin-semana"></select>
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <button class="btn btn-accent" style="margin-top:0;" onclick="consultarDetalleSemanaAdmin()">Consultar</button>
+                    </div>
+                </div>
+                <div id="contenedor-historial-admin" style="margin-top: 10px;"></div>
+            </div>
+
+            <!-- BACKUP LOCAL Y RESET BD -->
+            <div class="card card-compact" style="border: 1px solid var(--border-color);">
+                <div class="card-title" style="color: var(--primary);">Copia de Seguridad</div>
+                <p style="font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 8px;">
+                    Exporta una copia íntegra en formato .json de Firebase a la memoria de tu dispositivo.
+                </p>
+                <button class="btn btn-backup" onclick="descargarBackupLocalJSON()">📦 Descargar Backup Local (.json)</button>
+            </div>
+
+            <div class="card card-compact" style="border: 1px solid var(--rose-light);">
+                <div class="card-title" style="color: var(--rose);">Mantenimiento de Base de Datos</div>
+                <p style="font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 8px;">
+                    Borra todos los registros de turnos, acumulados e historial semanal para comenzar desde cero.
+                </p>
+                <button class="btn btn-danger" onclick="abrirModalResetBD()">⚠️ Formatear Base de Datos a 0</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- BOTTOM NAVIGATION (NATIVO APK) -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="cambiarSeccion('semanal', this)">
+            <span class="nav-icon">📈</span>
+            <span>Efi Semanal</span>
+        </button>
+        <button class="nav-item" onclick="cambiarSeccion('tons', this)">
+            <span class="nav-icon">⚖️</span>
+            <span>Tons Acum.</span>
+        </button>
+        <button class="nav-item" onclick="cambiarSeccion('jaulas', this)">
+            <span class="nav-icon">📦</span>
+            <span>Total Jaulas</span>
+        </button>
+        <button class="nav-item" id="nav-admin-tab" style="display: none;" onclick="cambiarSeccion('admin', this)">
+            <span class="nav-icon">⚙️</span>
+            <span>Admin Panel</span>
+        </button>
+    </div>
+
+    <div id="toast">Notificación</div>
+
+    <!-- MODAL LOGIN -->
+    <div class="modal" id="modal-login">
+        <div class="modal-content">
+            <div class="card-title">Inicio de Sesión Admin</div>
+            <div class="form-group">
+                <label>Correo Electrónico</label>
+                <input type="email" id="input-email" placeholder="admin@empresa.com">
+            </div>
+            <div class="form-group">
+                <label>Contraseña Administrador</label>
+                <div class="password-container">
+                    <input type="password" id="input-pass" placeholder="Ingresa contraseña" style="padding-right: 35px;">
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">👁️</button>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="btn-login-submit" onclick="loginAdmin()">Ingresar</button>
+            <button class="btn btn-danger" onclick="cerrarLoginModal()" style="margin-top:6px;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMACIÓN RESET BD -->
+    <div class="modal" id="modal-reset-bd">
+        <div class="modal-content">
+            <div class="card-title" style="color: var(--rose);">⚠️️ Confirmar Borrado Total</div>
+            <p style="font-size: 0.80rem; color: var(--text-primary); margin-bottom: 12px; text-align: center; line-height: 1.4;">
+                ¿Estás seguro de que deseas <strong>eliminar toda la base de datos</strong>?<br><br>
+                Esta acción borrará todos los turnos, toneladas e historial acumulado. No se podrá recuperar.
+            </p>
+            <button class="btn btn-danger" id="btn-confirm-reset" onclick="ejecutarResetBaseDatos()">Sí, Borrar Todo a 0</button>
+            <button class="btn btn-accent" onclick="cerrarModalResetBD()" style="margin-top:6px;">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB0Va-EKo80zgIMAObFhaXiw30TEAHZkvU", 
+            authDomain: "eficiencia-d5aeb.firebaseapp.com",
+            databaseURL: "https://eficiencia-d5aeb-default-rtdb.firebaseio.com/" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        
+        try {
+            firebase.database().setPersistenceEnabled(true);
+        } catch (e) {
+            console.log("Persistencia de Firebase activada.");
+        }
+
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        let isAdmin = false;
+        let catalogoMaquinas = [];
+        let equiposTurno = [];
+        let datosSemanalesExportar = [];
+        let kpisSemanaActual = {};
+
+        // Configuración para el escáner de Jaulas NFC
+        let ndefReaderInstance = null;
+        let totalEscaneosNFC = 0;
+        let conteoJaulasNFC = {
+            '11-41': { jaulas: 0, lecturas: 0, pesoJaula: 27 },
+            '11-45': { jaulas: 0, lecturas: 0, pesoJaula: 27 },
+            '11-29': { jaulas: 0, lecturas: 0, pesoJaula: 27 },
+            '7-225': { jaulas: 0, lecturas: 0, pesoJaula: 27 },
+            '7-226': { jaulas: 0, lecturas: 0, pesoJaula: 27 },
+            '7-227': { jaulas: 0, lecturas: 0, pesoJaula: 27 },
+            '7-228': { jaulas: 0, lecturas: 0, pesoJaula: 27 }
+        };
+
+        // Cargar datos del conteo NFC desde LocalStorage para persistencia al recargar página
+        function cargarConteoJaulasLocalStorage() {
+            try {
+                const savedConteo = localStorage.getItem('conteoJaulasNFC_Data');
+                const savedEscaneos = localStorage.getItem('totalEscaneosNFC_Data');
+
+                if (savedConteo) {
+                    const parsed = JSON.parse(savedConteo);
+                    conteoJaulasNFC = { ...conteoJaulasNFC, ...parsed };
+                }
+                if (savedEscaneos) {
+                    totalEscaneosNFC = parseInt(savedEscaneos) || 0;
+                }
+            } catch (e) {
+                console.error("Error al cargar conteo guardado:", e);
+            }
+        }
+
+        function guardarConteoJaulasLocalStorage() {
+            try {
+                localStorage.setItem('conteoJaulasNFC_Data', JSON.stringify(conteoJaulasNFC));
+                localStorage.setItem('totalEscaneosNFC_Data', totalEscaneosNFC.toString());
+            } catch (e) {
+                console.error("Error al guardar conteo localmente:", e);
+            }
+        }
+
+        // Ejecutar carga inicial de datos guardados
+        cargarConteoJaulasLocalStorage();
+
+        document.getElementById('fecha').valueAsDate = new Date();
+
+        /* ==========================================================
+           1. ARQUITECTURA DE ALMACENAMIENTO LOCAL Y SINCRONIZACIÓN (IndexedDB)
+           ========================================================== */
+        let localDb = null;
+
+        function initIndexedDB() {
+            const request = indexedDB.open("EficienciasLocalStoreDB", 1);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains("turnos_pendientes")) {
+                    db.createObjectStore("turnos_pendientes", { keyPath: "id", autoIncrement: true });
+                }
+            };
+            request.onsuccess = (e) => {
+                localDb = e.target.result;
+                sincronizarPendientesOffline();
+            };
+            request.onerror = (e) => {
+                console.error("Error iniciando IndexedDB:", e);
+            };
+        }
+        initIndexedDB();
+
+        function guardarTurnoLocal(registro) {
+            return new Promise((resolve, reject) => {
+                if (!localDb) return reject("IndexedDB no inicializado");
+                const tx = localDb.transaction("turnos_pendientes", "readwrite");
+                const store = tx.objectStore("turnos_pendientes");
+                const req = store.add(registro);
+                req.onsuccess = () => resolve(true);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function obtenerTurnosLocales() {
+            return new Promise((resolve) => {
+                if (!localDb) return resolve([]);
+                const tx = localDb.transaction("turnos_pendientes", "readonly");
+                const store = tx.objectStore("turnos_pendientes");
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => resolve([]);
+            });
+        }
+
+        function eliminarTurnoLocal(id) {
+            return new Promise((resolve) => {
+                if (!localDb) return resolve();
+                const tx = localDb.transaction("turnos_pendientes", "readwrite");
+                const store = tx.objectStore("turnos_pendientes");
+                store.delete(id);
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        async function sincronizarPendientesOffline() {
+            if (!navigator.onLine) return actualizarBadgeRed(false);
+            
+            const pendientes = await obtenerTurnosLocales();
+            actualizarBadgeRed(true, pendientes.length);
+
+            if (pendientes.length === 0) return;
+
+            showToast(`Sincronizando ${pendientes.length} turno(s) pendientes...`);
+
+            for (const item of pendientes) {
+                const itemID = item.id;
+                const registroTurno = { ...item };
+                delete registroTurno.id;
+
+                try {
+                    await db.ref('turnos').push(registroTurno);
+                    
+                    registroTurno.equipos.forEach(eq => {
+                        const tonCargadas = eq.jaulas * eq.pesoJaula;
+                        const keyUnica = eq.id + '_' + (eq.operador || 'sincod');
+                        db.ref('toneladas_acumuladas/' + keyUnica).transaction(current => (current || 0) + tonCargadas);
+                    });
+
+                    await eliminarTurnoLocal(itemID);
+                } catch (err) {
+                    console.error("Error sincronizando turno id " + itemID, err);
+                    break;
+                }
+            }
+
+            const restantes = await obtenerTurnosLocales();
+            actualizarBadgeRed(true, restantes.length);
+            if (restantes.length === 0) {
+                showToast("Sincronización completada exitosamente");
+            }
+        }
+
+        function actualizarBadgeRed(isOnline, cantidadPendientes = 0) {
+            const badge = document.getElementById('network-badge');
+            if (isOnline) {
+                if (cantidadPendientes > 0) {
+                    badge.className = "offline-status-badge offline";
+                    badge.innerText = `⏳ Sync (${cantidadPendientes})`;
+                } else {
+                    badge.className = "offline-status-badge";
+                    badge.innerText = "🟢 Online";
+                }
+            } else {
+                badge.className = "offline-status-badge offline";
+                badge.innerText = `📡 Offline (${cantidadPendientes})`;
+            }
+        }
+
+        window.addEventListener('online', () => sincronizarPendientesOffline());
+        window.addEventListener('offline', async () => {
+            const pend = await obtenerTurnosLocales();
+            actualizarBadgeRed(false, pend.length);
+        });
+
+        /* ==========================================================
+           2. MÓDULO NFC & CONTEO DE JAULAS
+           ========================================================== */
+        async function iniciarEscanerNFC() {
+            if (!('NDEFReader' in window)) {
+                return showToast("⚠️ Tu dispositivo o navegador no soporta Web NFC.");
+            }
+
+            try {
+                if (!ndefReaderInstance) {
+                    ndefReaderInstance = new NDEFReader();
+                }
+                
+                await ndefReaderInstance.scan();
+                
+                const indicator = document.getElementById('nfc-pulse-indicator');
+                const statusText = document.getElementById('nfc-status-text');
+                const btn = document.getElementById('btn-toggle-nfc');
+
+                indicator.classList.remove('inactive');
+                statusText.innerText = "Escaneando... Acerca la etiqueta NFC a la parte trasera.";
+                btn.style.display = "none";
+
+                showToast("📡 Escáner NFC Activado");
+
+                ndefReaderInstance.onreading = event => {
+                    const decoder = new TextDecoder();
+                    let idDetectado = "";
+
+                    for (const record of event.message.records) {
+                        if (record.recordType === "text") {
+                            idDetectado = decoder.decode(record.data).trim();
+                            break;
+                        }
+                    }
+
+                    if (!idDetectado && event.serialNumber) {
+                        idDetectado = event.serialNumber.trim();
+                    }
+
+                    if (idDetectado) {
+                        procesarEscaneoNFC(idDetectado);
+                    } else {
+                        showToast("⚠️ Tag NFC leído, pero sin ID de maquinaria válido.");
+                    }
+                };
+
+                ndefReaderInstance.onreadingerror = () => {
+                    showToast("Error al leer la etiqueta NFC. Intenta de nuevo.");
+                };
+
+            } catch (error) {
+                console.error("Error NFC: ", error);
+                showToast("No se pudo activar el NFC. Asegúrate de dar los permisos.");
+            }
+        }
+
+        // Función para contar cuantas veces aparece una ID o patron exacto en el texto de la tarjeta escaneada
+        function contarOcurrenciasID(texto, idTarget) {
+            if (!texto || !idTarget) return 0;
+            
+            let variantes = [idTarget];
+            if (idTarget.startsWith("7-")) {
+                variantes.push("07-" + idTarget.substring(2));
+            } else if (idTarget.startsWith("07-")) {
+                variantes.push("7-" + idTarget.substring(3));
+            }
+
+            let totalEncontrado = 0;
+            variantes.forEach(v => {
+                const pEscaped = v.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const regex = new RegExp(`(?<=^|[^0-9])${pEscaped}(?=[^0-9]|$)`, 'gi');
+                const matches = texto.match(regex);
+                if (matches) {
+                    totalEncontrado += matches.length;
+                }
+            });
+
+            return totalEncontrado;
+        }
+
+        function procesarEscaneoNFC(rawText) {
+            if (!rawText) return;
+
+            const textoLimpio = rawText.toUpperCase().trim();
+
+            let targetIDs = ['11-41', '11-45', '11-29', '7-225', '7-226', '7-227', '7-228'];
+
+            catalogoMaquinas.forEach(m => {
+                if (m.maquinaria_id) {
+                    let norm = m.maquinaria_id.startsWith("07-") ? "7-" + m.maquinaria_id.substring(3) : m.maquinaria_id;
+                    if (!targetIDs.includes(norm) && !targetIDs.includes(m.maquinaria_id)) {
+                        targetIDs.push(m.maquinaria_id);
+                    }
+                }
+            });
+
+            let seEncontroAlguno = false;
+            let resumenEscaneo = [];
+
+            targetIDs.forEach(idTarget => {
+                const cantidadOcurrencias = contarOcurrenciasID(textoLimpio, idTarget);
+
+                if (cantidadOcurrencias > 0) {
+                    seEncontroAlguno = true;
+
+                    if (!conteoJaulasNFC[idTarget]) {
+                        conteoJaulasNFC[idTarget] = { jaulas: 0, lecturas: 0, pesoJaula: 27 };
+                    }
+
+                    let jaulasASumar = cantidadOcurrencias;
+
+                    conteoJaulasNFC[idTarget].jaulas += jaulasASumar;
+                    conteoJaulasNFC[idTarget].lecturas += cantidadOcurrencias;
+
+                    resumenEscaneo.push(`${idTarget} (x${cantidadOcurrencias})`);
+                }
+            });
+
+            if (seEncontroAlguno) {
+                totalEscaneosNFC += 1;
+                guardarConteoJaulasLocalStorage();
+                if (navigator.vibrate) {
+                    navigator.vibrate(150);
+                }
+                showToast(`🚜 Escaneado: ${resumenEscaneo.join(', ')}`);
+                renderConteoJaulas();
+            } else {
+                showToast(`⚠️ No se reconoció ningún ID válido en el escaneo.`);
+            }
+        }
+
+        function renderConteoJaulas() {
+            const container = document.getElementById('lista-conteo-jaulas-nfc');
+            let totalJaulasSuma = 0;
+
+            container.innerHTML = '';
+
+            for (let idEq in conteoJaulasNFC) {
+                const item = conteoJaulasNFC[idEq];
+                totalJaulasSuma += item.jaulas;
+
+                container.innerHTML += `
+                    <div class="list-row">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:800; font-size:0.85rem;">${idEq}</span>
+                            <span style="font-size:0.68rem; color:var(--text-secondary);">Lecturas: ${item.lecturas}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <label style="font-size:0.68rem; font-weight:700;">Jaulas:</label>
+                            <input type="number" class="jaula-counter-input" value="${item.jaulas}" min="0" onchange="modificarJaulasManualmente('${idEq}', this.value)">
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('kpi-total-jaulas-nfc').innerText = totalJaulasSuma;
+            document.getElementById('kpi-total-escaneos-nfc').innerText = totalEscaneosNFC;
+        }
+
+        function modificarJaulasManualmente(idEq, valor) {
+            const valNum = parseInt(valor) || 0;
+            if (conteoJaulasNFC[idEq]) {
+                conteoJaulasNFC[idEq].jaulas = Math.max(0, valNum);
+                guardarConteoJaulasLocalStorage();
+                renderConteoJaulas();
+            }
+        }
+
+        function resetearConteoJaulas() {
+            totalEscaneosNFC = 0;
+            for (let idEq in conteoJaulasNFC) {
+                conteoJaulasNFC[idEq].jaulas = 0;
+                conteoJaulasNFC[idEq].lecturas = 0;
+            }
+            localStorage.removeItem('conteoJaulasNFC_Data');
+            localStorage.removeItem('totalEscaneosNFC_Data');
+            renderConteoJaulas();
+            showToast("Conteo de jaulas reiniciado a 0");
+        }
+
+        /* ==========================================================
+           3. UTILIDADES GENERALES & AUTENTICACIÓN
+           ========================================================== */
+        function showToast(msj) {
+            const t = document.getElementById("toast");
+            t.innerText = msj;
+            t.className = "show";
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3500);
+        }
+
+        function cleanFirebaseKey(key) {
+            return key.replace(/[\.\#\$\/\[\]]/g, "_");
+        }
+
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('input-pass');
+            passInput.type = (passInput.type === 'password') ? 'text' : 'password';
+        }
+
+        function triggerHeaderTractorAnimation() {
+            const tractorEl = document.getElementById('header-tractor-banner');
+            tractorEl.classList.remove('animate-login');
+            void tractorEl.offsetWidth;
+            tractorEl.classList.add('animate-login');
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                if (!isAdmin) {
+                    triggerHeaderTractorAnimation();
+                }
+                isAdmin = true;
+                document.getElementById('auth-btn').innerText = "Admin (Cerrar)";
+                document.getElementById('nav-admin-tab').style.display = "flex";
+                document.getElementById('btn-exportar-excel').style.display = "inline-block";
+                document.getElementById('btn-exportar-pdf').style.display = "inline-block";
+                document.getElementById('btn-guardar-semanal').style.display = "inline-block";
+                cargarSemanasDisponiblesAdmin();
+            } else {
+                isAdmin = false;
+                document.getElementById('auth-btn').innerText = "Login Admin";
+                document.getElementById('nav-admin-tab').style.display = "none";
+                document.getElementById('btn-exportar-excel').style.display = "none";
+                document.getElementById('btn-exportar-pdf').style.display = "none";
+                document.getElementById('btn-guardar-semanal').style.display = "none";
+                if(document.getElementById('sec-admin').classList.contains('active')) {
+                    cambiarSeccion('semanal', document.querySelectorAll('.nav-item')[0]);
+                }
+            }
+            renderEquipos();
+            cargarEfiSemanal();
+        });
+
+        function toggleAuthModal() {
+            if (isAdmin) {
+                auth.signOut().then(() => {
+                    showToast("Sesión cerrada correctamente");
+                });
+            } else {
+                document.getElementById('modal-login').classList.add('open');
+            }
+        }
+
+        function cerrarLoginModal() {
+            document.getElementById('modal-login').classList.remove('open');
+        }
+
+        function loginAdmin() {
+            const email = document.getElementById('input-email').value.trim();
+            const pass = document.getElementById('input-pass').value;
+
+            if (!email || !pass) {
+                return showToast("Ingrese correo y contraseña");
+            }
+
+            const btn = document.getElementById('btn-login-submit');
+            btn.disabled = true;
+            btn.innerText = "Verificando...";
+
+            auth.signInWithEmailAndPassword(email, pass)
+                .then(() => {
+                    btn.disabled = false;
+                    btn.innerText = "Ingresar";
+                    cerrarLoginModal();
+                    document.getElementById('input-email').value = '';
+                    document.getElementById('input-pass').value = '';
+                    showToast("Sesión iniciada correctamente");
+                })
+                .catch(error => {
+                    btn.disabled = false;
+                    btn.innerText = "Ingresar";
+                    showToast("Correo o contraseña incorrectos");
+                });
+        }
+
+        function cambiarSeccion(secId, btn) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('sec-' + secId).classList.add('active');
+            if(btn) btn.classList.add('active');
+
+            if(secId === 'semanal') cargarEfiSemanal();
+            if(secId === 'tons') cargarTonsAcumuladas();
+            if(secId === 'jaulas') renderConteoJaulas();
+            if(secId === 'admin') cargarSemanasDisponiblesAdmin();
+        }
+
+        function getSemanaNumero(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+        }
+
+        db.ref('catalogo').on('value', snapshot => {
+            catalogoMaquinas = [];
+            const data = snapshot.val();
+            for (let id in data) {
+                catalogoMaquinas.push({ key: id, ...data[id] });
+            }
+            renderCatalogoAdmin();
+            renderEquipos();
+        });
+
+        function renderCatalogoAdmin() {
+            const container = document.getElementById('lista-catalogo-admin');
+            container.innerHTML = '';
+            if (catalogoMaquinas.length === 0) {
+                container.innerHTML = `<p style="font-size:0.75rem; color:var(--text-secondary);">No hay maquinarias registradas.</p>`;
+                return;
+            }
+            catalogoMaquinas.forEach(m => {
+                container.innerHTML += `
+                    <div class="list-row">
+                        <span><strong>ID:</strong> ${m.maquinaria_id} | <strong>Op:</strong> ${m.operador}</span>
+                        <button class="btn-delete" onclick="borrarCatalogo('${m.key}')">Eliminar</button>
+                    </div>
+                `;
+            });
+        }
+
+        function guardarCatalogoMaquinaria() {
+            const idInput = document.getElementById('admin-new-id');
+            const opInput = document.getElementById('admin-new-operador');
+            const idVal = cleanFirebaseKey(idInput.value.trim());
+            const opVal = opInput.value.trim();
+
+            if (!idVal || !opVal) {
+                return showToast("Ingrese ID y Operador válidos");
+            }
+            
+            db.ref('catalogo').push({ maquinaria_id: idVal, operador: opVal }, (err) => {
+                if(!err) {
+                    idInput.value = '';
+                    opInput.value = '';
+                    showToast("Maquinaria guardada con éxito");
+                } else {
+                    showToast("Error al guardar en base de datos");
+                }
+            });
+        }
+
+        function borrarCatalogo(key) {
+            db.ref('catalogo/' + key).remove(() => showToast("Maquinaria eliminada"));
+        }
+
+        function agregarFormMaquinaria() {
+            if(catalogoMaquinas.length === 0) return showToast("Agregue primero equipos en Admin");
+            equiposTurno.push({ id: catalogoMaquinas[0].maquinaria_id, operador: catalogoMaquinas[0].operador, hrTrab: 8, hrNoEfect: 0, motivoNoEfect: 'Ninguno', jaulas: 0, pesoJaula: 27 });
+            renderEquipos();
+        }
+
+        function renderEquipos() {
+            const container = document.getElementById('equipos-container');
+            container.innerHTML = '';
+
+            equiposTurno.forEach((eq, index) => {
+                const hrTrab = parseFloat(eq.hrTrab) || 0;
+                const hrNoEfect = parseFloat(eq.hrNoEfect) || 0;
+                const jaulas = parseFloat(eq.jaulas) || 0;
+                const pesoJaula = parseFloat(eq.pesoJaula) || 0;
+
+                const hrEfectivas = Math.max(0, hrTrab - hrNoEfect);
+                const toneladas = jaulas * pesoJaula;
+                const eficiencia = hrEfectivas > 0 ? (toneladas / hrEfectivas).toFixed(2) : 0;
+
+                let optHtml = catalogoMaquinas.map(m => `<option value="${m.maquinaria_id}|${m.operador}" ${(m.maquinaria_id === eq.id && m.operador === eq.operador) ? 'selected':''}>${m.maquinaria_id} (Op: ${m.operador})</option>`).join('');
+
+                container.innerHTML += `
+                    <div class="card card-compact" id="card-eq-${index}">
+                        <div class="card-title" style="margin-bottom:6px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span>#${index + 1} Equipo/Op:</span>
+                                <select style="width:auto; height:34px; padding:2px 6px; font-size:0.78rem; font-weight:700;" onchange="actualizarSeleccionEquipo(${index}, this.value)">${optHtml}</select>
+                            </div>
+                            <button class="btn-delete" onclick="eliminarEquipoTurno(${index})">Eliminar</button>
+                        </div>
+                        
+                        <div class="grid-compact-inputs">
+                            <div class="form-group">
+                                <label>Hrs Trab.</label>
+                                <input type="number" step="any" inputmode="decimal" value="${eq.hrTrab}" oninput="actualizarEq(${index}, 'hrTrab', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label>Hrs No Efec.</label>
+                                <input type="number" step="any" inputmode="decimal" value="${eq.hrNoEfect}" oninput="actualizarEq(${index}, 'hrNoEfect', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label>Motivo No Efec.</label>
+                                <select onchange="actualizarEq(${index}, 'motivoNoEfect', this.value)" style="font-size:0.72rem; padding:4px;">
+                                    <option value="Ninguno" ${eq.motivoNoEfect === 'Ninguno' ? 'selected':''}>Ninguno</option>
+                                    <option value="Sanateo" ${eq.motivoNoEfect === 'Sanateo' ? 'selected':''}>Sanateo</option>
+                                    <option value="Apoyo torre" ${eq.motivoNoEfect === 'Apoyo torre' ? 'selected':''}>Apoyo torre</option>
+                                    <option value="Apoyo quema" ${eq.motivoNoEfect === 'Apoyo quema' ? 'selected':''}>Apoyo quema</option>
+                                    <option value="Traslado" ${eq.motivoNoEfect === 'Traslado' ? 'selected':''}>Traslado</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid-compact-inputs" style="margin-top:6px;">
+                            <div class="form-group">
+                                <label>Hrs Efec.</label>
+                                <input type="text" class="calc-field calc-href" value="${hrEfectivas.toFixed(1)}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Jaulas</label>
+                                <input type="number" step="any" inputmode="decimal" value="${eq.jaulas}" oninput="actualizarEq(${index}, 'jaulas', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label>Peso Jaula</label>
+                                <input type="number" step="any" inputmode="decimal" value="${eq.pesoJaula}" oninput="actualizarEq(${index}, 'pesoJaula', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 6px;">
+                            <label>Eficiencia (Ton/Hr)</label>
+                            <input type="text" class="calc-field calc-efi" value="${eficiencia}" readonly style="font-size: 1rem !important;">
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function actualizarSeleccionEquipo(index, val) {
+            const parts = val.split('|');
+            equiposTurno[index].id = parts[0];
+            equiposTurno[index].operador = parts[1] || '';
+        }
+
+        function actualizarEq(index, campo, val) {
+            equiposTurno[index][campo] = val;
+
+            const card = document.getElementById(`card-eq-${index}`);
+            if (!card) return;
+
+            const eq = equiposTurno[index];
+            const hrTrab = parseFloat(eq.hrTrab) || 0;
+            const hrNoEfect = parseFloat(eq.hrNoEfect) || 0;
+            const jaulas = parseFloat(eq.jaulas) || 0;
+            const pesoJaula = parseFloat(eq.pesoJaula) || 0;
+
+            const hrEfectivas = Math.max(0, hrTrab - hrNoEfect);
+            const toneladas = jaulas * pesoJaula;
+            const eficiencia = hrEfectivas > 0 ? (toneladas / hrEfectivas).toFixed(2) : 0;
+
+            card.querySelector('.calc-href').value = hrEfectivas.toFixed(1);
+            card.querySelector('.calc-efi').value = eficiencia;
+        }
+
+        function eliminarEquipoTurno(i) {
+            equiposTurno.splice(i, 1);
+            renderEquipos();
+        }
+
+        /* ==========================================================
+           4. GUARDADO INTELIGENTE (ONLINE / OFFLINE REFORZADO)
+           ========================================================== */
+        async function guardarTurnoInteligente() {
+            if(equiposTurno.length === 0) return showToast("Agregue al menos una maquinaria");
+
+            const btn = document.getElementById('btn-guardar-turno');
+            btn.disabled = true;
+            btn.innerText = "⏳ Procesando...";
+
+            const fechaVal = document.getElementById('fecha').value;
+            const numSemana = getSemanaNumero(new Date(fechaVal));
+
+            const equiposParseados = equiposTurno.map(eq => ({
+                id: cleanFirebaseKey(eq.id),
+                operador: eq.operador || '',
+                hrTrab: Math.max(0, parseFloat(eq.hrTrab) || 0),
+                hrNoEfect: Math.max(0, parseFloat(eq.hrNoEfect) || 0),
+                motivoNoEfect: eq.motivoNoEfect || 'Ninguno',
+                jaulas: Math.max(0, parseFloat(eq.jaulas) || 0),
+                pesoJaula: Math.max(0, parseFloat(eq.pesoJaula) || 0)
+            }));
+
+            const registroTurno = {
+                frente: document.getElementById('frente').value,
+                finca: document.getElementById('finca').value,
+                fecha: fechaVal,
+                semana: numSemana,
+                turno: document.getElementById('turno').value,
+                observaciones: document.getElementById('observaciones').value,
+                equipos: equiposParseados,
+                archivado: false,
+                timestamp: new Date().getTime()
+            };
+
+            if (navigator.onLine) {
+                db.ref('turnos').push(registroTurno, async (err) => {
+                    btn.disabled = false;
+                    btn.innerText = "💾 Guardar Turno";
+
+                    if(!err) {
+                        equiposParseados.forEach(eq => {
+                            const tonCargadas = eq.jaulas * eq.pesoJaula;
+                            const keyUnica = eq.id + '_' + (eq.operador || 'sincod');
+                            db.ref('toneladas_acumuladas/' + keyUnica).transaction(current => (current || 0) + tonCargadas);
+                        });
+
+                        showToast("Turno guardado correctamente");
+                        equiposTurno = [];
+                        document.getElementById('observaciones').value = '';
+                        renderEquipos();
+                    } else {
+                        await guardarTurnoLocal(registroTurno);
+                        const p = await obtenerTurnosLocales();
+                        actualizarBadgeRed(true, p.length);
+                        showToast("Guardado localmente (sin conexión estable)");
+                        equiposTurno = [];
+                        document.getElementById('observaciones').value = '';
+                        renderEquipos();
+                    }
+                });
+            } else {
+                await guardarTurnoLocal(registroTurno);
+                btn.disabled = false;
+                btn.innerText = "💾 Guardar Turno";
+                const p = await obtenerTurnosLocales();
+                actualizarBadgeRed(false, p.length);
+                showToast("📦 Guardado offline. Se enviará al reconectar.");
+                equiposTurno = [];
+                document.getElementById('observaciones').value = '';
+                renderEquipos();
+            }
+        }
+
+        function cargarEfiSemanal() {
+            const fechaActual = new Date();
+            const numSemana = getSemanaNumero(fechaActual);
+            document.getElementById('lbl-semana-actual').innerText = "Semana " + numSemana;
+
+            db.ref('turnos').orderByChild('semana').equalTo(numSemana - 1).once('value', snapshotDom => {
+                const dataDom = snapshotDom.val();
+                let arrastreDomingo = {};
+
+                if (dataDom) {
+                    for (let key in dataDom) {
+                        const t = dataDom[key];
+                        const dFecha = new Date(t.fecha);
+                        if ((dFecha.getUTCDay() === 0 || t.turno === 'NOCTURNO') && t.turno === 'NOCTURNO') {
+                            t.equipos.forEach(eq => {
+                                const hrEf = Math.max(0, eq.hrTrab - eq.hrNoEfect);
+                                const hrNoEf = Math.max(0, eq.hrNoEfect);
+                                const ton = eq.jaulas * eq.pesoJaula;
+                                const claveIdOp = eq.operador ? `${eq.id}_${eq.operador}` : eq.id;
+
+                                if (!arrastreDomingo[claveIdOp]) {
+                                    arrastreDomingo[claveIdOp] = { idEquipo: eq.id, opCode: eq.operador || '', ton: 0, hrs: 0, noHrs: 0, hrTrab: 0, motivos: {}, pesos: [] };
+                                }
+                                arrastreDomingo[claveIdOp].ton += ton;
+                                arrastreDomingo[claveIdOp].hrs += hrEf;
+                                arrastreDomingo[claveIdOp].noHrs += hrNoEf;
+                                arrastreDomingo[claveIdOp].hrTrab += eq.hrTrab || 0;
+                                if (eq.motivoNoEfect && eq.motivoNoEfect !== 'Ninguno') {
+                                    arrastreDomingo[claveIdOp].motivos[eq.motivoNoEfect] = (arrastreDomingo[claveIdOp].motivos[eq.motivoNoEfect] || 0) + hrNoEf;
+                                }
+                                if (eq.pesoJaula > 0) arrastreDomingo[claveIdOp].pesos.push(eq.pesoJaula);
+                            });
+                        }
+                    }
+                }
+
+                db.ref('turnos').orderByChild('semana').equalTo(numSemana).on('value', snapshot => {
+                    const data = snapshot.val();
+                    let acumulado = JSON.parse(JSON.stringify(arrastreDomingo));
+                    datosSemanalesExportar = [];
+
+                    let totalTonsG = 0, totalHrsG = 0, totalNoHrsG = 0, sumaPesosG = 0, conteoPesosG = 0;
+                    let totalTonsA = 0, totalHrsA = 0, totalTonsT = 0, totalHrsT = 0;
+
+                    for(let key in data) {
+                        if (data[key].archivado) continue;
+
+                        data[key].equipos.forEach(eq => {
+                            const hrEf = Math.max(0, eq.hrTrab - eq.hrNoEfect);
+                            const hrNoEf = Math.max(0, eq.hrNoEfect);
+                            const ton = eq.jaulas * eq.pesoJaula;
+                            const claveIdOp = eq.operador ? `${eq.id}_${eq.operador}` : eq.id;
+
+                            if(!acumulado[claveIdOp]) {
+                                acumulado[claveIdOp] = { idEquipo: eq.id, opCode: eq.operador || '', ton: 0, hrs: 0, noHrs: 0, hrTrab: 0, motivos: {}, pesos: [] };
+                            }
+
+                            acumulado[claveIdOp].ton += ton;
+                            acumulado[claveIdOp].hrs += hrEf;
+                            acumulado[claveIdOp].noHrs += hrNoEf;
+                            acumulado[claveIdOp].hrTrab += eq.hrTrab || 0;
+                            if (eq.motivoNoEfect && eq.motivoNoEfect !== 'Ninguno') {
+                                acumulado[claveIdOp].motivos[eq.motivoNoEfect] = (acumulado[claveIdOp].motivos[eq.motivoNoEfect] || 0) + hrNoEf;
+                            }
+                            if(eq.pesoJaula > 0) acumulado[claveIdOp].pesos.push(eq.pesoJaula);
+                        });
+                    }
+
+                    for(let clave in acumulado) {
+                        const item = acumulado[clave];
+                        totalTonsG += item.ton;
+                        totalHrsG += item.hrs;
+                        totalNoHrsG += item.noHrs;
+                        item.pesos.forEach(p => { sumaPesosG += p; conteoPesosG++; });
+
+                        if(item.idEquipo.startsWith("11-")) {
+                            totalTonsA += item.ton;
+                            totalHrsA += item.hrs;
+                        } else if(item.idEquipo.startsWith("07-") || item.idEquipo.startsWith("7-")) {
+                            totalTonsT += item.ton;
+                            totalHrsT += item.hrs;
+                        }
+                    }
+
+                    const promEfiA = totalHrsA > 0 ? (totalTonsA / totalHrsA).toFixed(2) : '0.0';
+                    const promEfiT = totalHrsT > 0 ? (totalTonsT / totalHrsT).toFixed(2) : '0.0';
+                    const promPesoJaulaG = conteoPesosG > 0 ? (sumaPesosG / conteoPesosG).toFixed(1) : '0.0';
+
+                    document.getElementById('kpi-prom-efi-a').innerText = promEfiA;
+                    document.getElementById('kpi-prom-efi-t').innerText = promEfiT;
+                    document.getElementById('kpi-total-tons').innerText = Math.round(totalTonsG);
+                    document.getElementById('kpi-total-hrs').innerText = totalHrsG.toFixed(1);
+                    document.getElementById('kpi-no-hrs').innerText = totalNoHrsG.toFixed(1);
+                    document.getElementById('kpi-peso-prom').innerText = promPesoJaulaG;
+
+                    kpisSemanaActual = {
+                        semana: numSemana,
+                        promEfiA, promEfiT,
+                        totalTons: Math.round(totalTonsG),
+                        hrsEfectivas: totalHrsG.toFixed(1),
+                        hrsNoEfectivas: totalNoHrsG.toFixed(1),
+                        pesoPromedio: promPesoJaulaG
+                    };
+
+                    const list = document.getElementById('lista-efi-semanal');
+                    list.innerHTML = '';
+                    for(let clave in acumulado) {
+                        let item = acumulado[clave];
+                        let efiVal = item.hrs > 0 ? (item.ton / item.hrs) : 0;
+                        let efiStr = efiVal.toFixed(2);
+                        
+                        let labelID = item.opCode ? `${item.idEquipo} (Op: ${item.opCode})` : item.idEquipo;
+                        
+                        let motivosTextArr = [];
+                        for(let m in item.motivos) {
+                            motivosTextArr.push(`${m}: ${item.motivos[m]}h`);
+                        }
+                        let strMotivos = motivosTextArr.length > 0 ? motivosTextArr.join(', ') : 'Sin paros';
+
+                        datosSemanalesExportar.push({
+                            idEquipo: item.idEquipo,
+                            operador: item.opCode || 'N/A',
+                            toneladas: item.ton,
+                            horasTrabajadas: parseFloat(item.hrTrab.toFixed(1)),
+                            horasEfectivas: parseFloat(item.hrs.toFixed(1)),
+                            horasNoEfectivas: parseFloat(item.noHrs.toFixed(1)),
+                            motivosDetalle: strMotivos,
+                            eficiencia: parseFloat(efiStr)
+                        });
+
+                        let badgeClass = 'badge-optimo';
+                        if (efiVal < 20) {
+                            badgeClass = 'badge-bajo';
+                        } else if (efiVal < 30) {
+                            badgeClass = 'badge-aceptable';
+                        }
+
+                        let detalleAdminHtml = '';
+                        if (isAdmin) {
+                            detalleAdminHtml = `
+                                <div style="font-size:0.70rem; color:var(--text-secondary); margin-top:3px; display:flex; justify-content:space-between; width:100%;">
+                                    <span>Hrs Trab: ${item.hrTrab.toFixed(1)}h | No Efec: ${item.noHrs.toFixed(1)}h</span>
+                                    ${motivosTextArr.length > 0 ? `<span class="motivo-tag">${strMotivos}</span>` : ''}
+                                </div>
+                            `;
+                        }
+
+                        list.innerHTML += `
+                            <div class="list-row" style="flex-direction:column; align-items:flex-start;">
+                                <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                                    <span>ID: <strong>${labelID}</strong></span>
+                                    <span class="badge ${badgeClass}">Eficiencia: ${efiStr} Ton/Hr</span>
+                                </div>
+                                ${detalleAdminHtml}
+                            </div>
+                        `;
+                    }
+                });
+            });
+        }
+
+        /* ==========================================================
+           5. EXPORTACIÓN AVANZADA, WHATSAPP & BACKUP JSON
+           ========================================================== */
+        function enviarWhatsAppResumen() {
+            if (datosSemanalesExportar.length === 0) return showToast("No hay datos para enviar");
+
+            const numSemana = kpisSemanaActual.semana || getSemanaNumero(new Date());
+            let mensaje = `*🚜 CONTROL DE EFICIENCIAS - SEMANA ${numSemana}*\n`;
+            mensaje += `\n*📊 RESUMEN GENERAL:*`;
+            mensaje += `\n- Prom. Efi Alzadoras: ${kpisSemanaActual.promEfiA} T/h`;
+            mensaje += `\n- Prom. Efi Tractores: ${kpisSemanaActual.promEfiT} T/h`;
+            mensaje += `\n- Total Tons Cargadas: ${kpisSemanaActual.totalTons} T`;
+            mensaje += `\n- Horas Efectivas: ${kpisSemanaActual.hrsEfectivas} h`;
+            mensaje += `\n- Horas No Efectivas: ${kpisSemanaActual.hrsNoEfectivas} h\n`;
+            mensaje += `\n*📋 DETALLE POR EQUIPO:*`;
+
+            datosSemanalesExportar.forEach(eq => {
+                mensaje += `\n------------------------------`;
+                mensaje += `\n⚙ *Equipo:* ${eq.idEquipo}`;
+                mensaje += `\n👤 *Op:* ${eq.operador}`;
+                mensaje += `\n📈 *Eficiencia:* ${eq.eficiencia} Ton/Hr`;
+                mensaje += `\n⏱️ *Hrs Trab:* ${eq.horasTrabajadas}h | *No Efec:* ${eq.horasNoEfectivas}h`;
+                if(eq.motivosDetalle && eq.motivosDetalle !== 'Sin paros') {
+                    mensaje += `\n⚠️ *Motivos:* ${eq.motivosDetalle}`;
+                }
+            });
+
+            const urlWa = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`;
+            window.open(urlWa, '_blank');
+        }
+
+        function descargarBackupLocalJSON() {
+            db.ref().once('value', snapshot => {
+                const data = snapshot.val();
+                if(!data) return showToast("No hay datos para respaldar");
+
+                const jsonStr = JSON.stringify(data, null, 2);
+                const blob = new Blob([jsonStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                
+                const fechaHoy = new Date().toISOString().split('T')[0];
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Backup_Eficiencias_BD_${fechaHoy}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast("Backup local (.json) descargado");
+            });
+        }
+
+        function exportarExcelAvanzado() {
+            if (datosSemanalesExportar.length === 0) return showToast("No hay datos para exportar");
+
+            const wb = XLSX.utils.book_new();
+            const numSemana = kpisSemanaActual.semana || getSemanaNumero(new Date());
+
+            const resumenData = [
+                ["CONTROL DE EFICIENCIAS MAQUINARIA PRO - RESUMEN SEMANAL"],
+                ["Semana No:", numSemana],
+                ["Fecha de Generación:", new Date().toLocaleString()],
+                [],
+                ["INDICADOR KPI", "VALOR REGISTRADO"],
+                ["Promedio Eficiencia Alzadoras (11-)", parseFloat(kpisSemanaActual.promEfiA)],
+                ["Promedio Eficiencia Tractores (07-)", parseFloat(kpisSemanaActual.promEfiT)],
+                ["Total Toneladas Cargadas", kpisSemanaActual.totalTons],
+                ["Total Horas Efectivas", parseFloat(kpisSemanaActual.hrsEfectivas)],
+                ["Total Horas No Efectivas", parseFloat(kpisSemanaActual.hrsNoEfectivas)],
+                ["Peso Promedio por Jaula (Tons)", parseFloat(kpisSemanaActual.pesoPromedio)]
+            ];
+            const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
+            XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen KPI");
+
+            const detalleHeaders = [
+                ["ID Maquinaria", "Código Operador", "Tons Cargadas", "Hrs Trabajadas", "Hrs Efectivas", "Hrs No Efectivas", "Motivos Paro", "Eficiencia (Ton/Hr)"]
+            ];
+            const detalleFilas = datosSemanalesExportar.map(d => [
+                d.idEquipo,
+                d.operador,
+                d.toneladas,
+                d.horasTrabajadas,
+                d.horasEfectivas,
+                d.horasNoEfectivas,
+                d.motivosDetalle,
+                d.eficiencia
+            ]);
+
+            const wsDetalle = XLSX.utils.aoa_to_sheet([...detalleHeaders, ...detalleFilas]);
+            XLSX.utils.book_append_sheet(wb, wsDetalle, "Detalle Equipos");
+
+            XLSX.writeFile(wb, `Reporte_Eficiencia_Semana_${numSemana}.xlsx`);
+            showToast("Reporte Excel descargado (.xlsx)");
+        }
+
+        function exportarPDFAvanzado() {
+            if (datosSemanalesExportar.length === 0) return showToast("No hay datos para exportar");
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const numSemana = kpisSemanaActual.semana || getSemanaNumero(new Date());
+
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, 210, 25, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("CONTROL DE EFICIENCIAS MAQUINARIA PRO", 14, 16);
+
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Reporte Semanal: Semana ${numSemana} | Fecha: ${new Date().toLocaleDateString()}`, 14, 33);
+
+            doc.setDrawColor(226, 232, 240);
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(14, 38, 182, 28, 3, 3, 'FD');
+
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "bold");
+            
+            doc.text(`Prom. Efi A (11-): ${kpisSemanaActual.promEfiA} T/h`, 20, 46);
+            doc.text(`Prom. Efi T (07-): ${kpisSemanaActual.promEfiT} T/h`, 80, 46);
+            doc.text(`Total Tons: ${kpisSemanaActual.totalTons} T`, 140, 46);
+
+            doc.text(`Hrs Efectivas: ${kpisSemanaActual.hrsEfectivas} h`, 20, 58);
+            doc.text(`Hrs No Efectivas: ${kpisSemanaActual.hrsNoEfectivas} h`, 80, 58);
+            doc.text(`Peso Prom. Jaula: ${kpisSemanaActual.pesoPromedio} T`, 140, 58);
+
+            const tableBody = datosSemanalesExportar.map(d => [
+                d.idEquipo,
+                d.operador,
+                d.toneladas.toFixed(1),
+                d.horasEfectivas.toFixed(1),
+                `${d.horasNoEfectivas.toFixed(1)} (${d.motivosDetalle})`,
+                `${d.eficiencia.toFixed(2)} Ton/Hr`
+            ]);
+
+            doc.autoTable({
+                startY: 72,
+                head: [['ID Equipo', 'Operador', 'Tons', 'Hrs Efec.', 'Hrs No Efec. (Motivo)', 'Eficiencia']],
+                body: tableBody,
+                theme: 'striped',
+                headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
+                styles: { fontSize: 7.5, cellPadding: 3 },
+                columnStyles: { 5: { fontStyle: 'bold' } }
+            });
+
+            doc.save(`Reporte_Eficiencia_Semana_${numSemana}.pdf`);
+            showToast("Reporte PDF generado");
+        }
+
+        function guardarSemanalFirebase() {
+            const numSemana = getSemanaNumero(new Date());
+            const listData = [];
+            document.querySelectorAll('#lista-efi-semanal .list-row').forEach(row => {
+                listData.push(row.innerText.replace('\n', ' '));
+            });
+
+            db.ref('historial_semanal/Semana_' + numSemana).set({
+                fecha_cierre: new Date().toISOString(),
+                datos: listData
+            }, () => showToast("Semana guardada correctamente en historial"));
+        }
+
+        function cargarTonsAcumuladas() {
+            db.ref('toneladas_acumuladas').on('value', snapshot => {
+                const tonsData = snapshot.val() || {};
+                const list = document.getElementById('lista-tons-acumuladas');
+                list.innerHTML = '';
+
+                for(let key in tonsData) {
+                    let parts = key.split('_');
+                    let idEquipo = parts[0];
+                    let opCode = parts[1] || 'Sin Operador';
+
+                    list.innerHTML += `
+                        <div class="list-row" style="flex-direction:column; align-items:flex-start; gap:4px;">
+                            <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                                <span>ID: <strong>${idEquipo}</strong> (Op: ${opCode})</span>
+                                <span class="badge" style="background:var(--primary-light); color:var(--primary);">Tons: ${tonsData[key]}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function cargarSemanasDisponiblesAdmin() {
+            db.ref('turnos').once('value', snapshot => {
+                const data = snapshot.val();
+                let semanas = new Set();
+                for (let key in data) {
+                    if (data[key].semana) semanas.add(data[key].semana);
+                }
+                const select = document.getElementById('select-admin-semana');
+                select.innerHTML = '';
+                if (semanas.size === 0) {
+                    select.innerHTML = '<option value="">Sin semanas registradas</option>';
+                    return;
+                }
+                Array.from(semanas).sort((a,b) => b - a).forEach(s => {
+                    select.innerHTML += `<option value="${s}">Semana ${s}</option>`;
+                });
+            });
+        }
+
+        function consultarDetalleSemanaAdmin() {
+            const sem = parseInt(document.getElementById('select-admin-semana').value);
+            if (!sem) return showToast("Seleccione una semana válida");
+
+            db.ref('turnos').orderByChild('semana').equalTo(sem).once('value', snapshot => {
+                const data = snapshot.val();
+                const container = document.getElementById('contenedor-historial-admin');
+                container.innerHTML = '';
+
+                if (!data) {
+                    container.innerHTML = '<p style="font-size:0.78rem; color:var(--text-secondary);">No hay registros para esta semana.</p>';
+                    return;
+                }
+
+                for (let key in data) {
+                    const t = data[key];
+                    let eqHtml = '';
+                    t.equipos.forEach(eq => {
+                        const hrEf = Math.max(0, eq.hrTrab - eq.hrNoEfect);
+                        const ton = eq.jaulas * eq.pesoJaula;
+                        const efi = hrEf > 0 ? (ton / hrEf).toFixed(2) : 0;
+                        const labelOp = eq.operador ? ` | Op: ${eq.operador}` : '';
+                        const motivoStr = (eq.motivoNoEfect && eq.motivoNoEfect !== 'Ninguno') ? ` | Motivo: ${eq.motivoNoEfect}` : '';
+
+                        eqHtml += `
+                            <div class="list-row" style="font-size:0.75rem;">
+                                <span>ID: <strong>${eq.id}</strong>${labelOp} | Trab: ${eq.hrTrab}h | Efec: ${hrEf.toFixed(1)}h${motivoStr}</span>
+                                <span class="badge badge-optimo">Ton: ${ton} | Efi: ${efi}</span>
+                            </div>
+                        `;
+                    });
+
+                    const estadoTag = t.archivado ? ' <span style="color:var(--amber); font-size:0.68rem;">(Archivado)</span>' : '';
+
+                    container.innerHTML += `
+                        <div class="history-card">
+                            <h4>${t.frente} - ${t.finca} (${t.fecha} | Turno: ${t.turno})${estadoTag}</h4>
+                            <p style="font-size:0.72rem; color:var(--text-secondary); margin-bottom:6px;"><strong>Obs:</strong> ${t.observaciones || 'Ninguna'}</p>
+                            ${eqHtml}
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        /* REINICIAR LA BASE DE DATOS */
+        function abrirModalResetBD() {
+            document.getElementById('modal-reset-bd').classList.add('open');
+        }
+
+        function cerrarModalResetBD() {
+            document.getElementById('modal-reset-bd').classList.remove('open');
+        }
+
+        function ejecutarResetBaseDatos() {
+            const btn = document.getElementById('btn-confirm-reset');
+            btn.disabled = true;
+            btn.innerText = "⏳ Borrando datos...";
+
+            const updates = {};
+            updates['/turnos'] = null;
+            updates['/toneladas_acumuladas'] = null;
+            updates['/historial_semanal'] = null;
+
+            db.ref().update(updates)
+                .then(() => {
+                    btn.disabled = false;
+                    btn.innerText = "Sí, Borrar Todo a 0";
+                    cerrarModalResetBD();
+                    showToast("Base de datos formateada a 0 correctamente");
+                    cargarEfiSemanal();
+                    cargarTonsAcumuladas();
+                    cargarSemanasDisponiblesAdmin();
+                })
+                .catch((error) => {
+                    btn.disabled = false;
+                    btn.innerText = "Sí, Borrar Todo a 0";
+                    console.error("Error al resetear la base de datos:", error);
+                    showToast("Error al formatear la base de datos");
+                });
+        }
+    </script>
+</body>
+</html>
