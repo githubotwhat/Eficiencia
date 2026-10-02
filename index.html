@@ -1179,11 +1179,11 @@
                     badge.innerText = `⏳ Sync (${cantidadPendientes})`;
                 } else {
                     badge.className = "offline-status-badge";
-                    badge.innerText = "🟢 Online";
+                    badge.innerText = "🟢 En linea";
                 }
             } else {
                 badge.className = "offline-status-badge offline";
-                badge.innerText = `📡 Offline (${cantidadPendientes})`;
+                badge.innerText = `📡 Sin señal (${cantidadPendientes})`;
             }
         }
 
@@ -1466,7 +1466,7 @@
                     triggerHeaderTractorAnimation();
                 }
                 isAdmin = true;
-                document.getElementById('auth-btn').innerText = "Admin (Cerrar)";
+                document.getElementById('auth-btn').innerText = "👤 (Cerrar)";
                 document.getElementById('nav-admin-tab').style.display = "flex";
                 document.getElementById('btn-exportar-excel').style.display = "inline-block";
                 document.getElementById('btn-exportar-pdf').style.display = "inline-block";
