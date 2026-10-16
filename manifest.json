@@ -17,6 +17,6 @@
   "background_color": "#f0f4f8",
   "theme_color": "#000000",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait",
   "scope": "https://githubotwhat.github.io/Eficiencia/index.html"
 }
